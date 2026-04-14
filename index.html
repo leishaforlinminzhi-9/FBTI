@@ -189,9 +189,15 @@
 
       <!-- Stage: Result -->
       <main x-show="stage === 'result'" x-transition.opacity.duration.250ms x-cloak>
-        <section class="relative overflow-hidden rounded-2xl p-[1px] shadow-soft">
+        <section
+          class="relative overflow-hidden rounded-2xl p-[1px] shadow-soft"
+          :style="`--accent:${theme.accent};--accent2:${theme.accent2};--accentText:${theme.accentText};`"
+        >
           <!-- gradient border -->
-          <div class="absolute inset-0 bg-gradient-to-br from-ultimate/70 via-sky-400/50 to-emerald-300/40"></div>
+          <div
+            class="absolute inset-0"
+            :style="`background: linear-gradient(135deg, ${theme.accent}cc, ${theme.accent2}88, rgba(16,185,129,.35));`"
+          ></div>
           <!-- glass card -->
           <div class="relative rounded-2xl bg-white/70 p-5 backdrop-blur">
             <div class="flex items-start justify-between gap-3">
@@ -200,14 +206,37 @@
                 <div class="mt-1 text-3xl font-black tracking-tight text-ink">
                   <span x-text="result.code"></span>
                 </div>
-                <div class="mt-1 text-sm font-extrabold text-ultimate" x-text="result.title"></div>
+                <div class="mt-1 text-sm font-extrabold" :style="`color: var(--accent)`" x-text="result.title"></div>
               </div>
-              <div class="rounded-2xl bg-ultimate px-3 py-2 text-xs font-bold text-white shadow-lg shadow-ultimate/25">
+              <div
+                class="rounded-2xl px-3 py-2 text-xs font-bold shadow-lg"
+                :style="`background: var(--accent); color: var(--accentText); box-shadow: 0 12px 28px color-mix(in oklab, var(--accent) 35%, transparent);`"
+              >
                 FBTI
               </div>
             </div>
 
             <div class="mt-4 grid gap-3">
+              <div class="overflow-hidden rounded-2xl border border-white/50 bg-white/50">
+                <div class="relative">
+                  <img
+                    class="h-auto w-full object-cover"
+                    :src="resultImageUrl()"
+                    :alt="`FBTI ${result.code}`"
+                    @load="onResultImgLoad($event)"
+                    @error="onResultImgError()"
+                  />
+                  <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"></div>
+                  <div class="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+                    <div class="rounded-2xl bg-white/70 px-3 py-2 text-xs font-extrabold text-slate-900 backdrop-blur">
+                      <span x-text="result.title"></span>
+                    </div>
+                    <div class="rounded-2xl px-3 py-2 text-xs font-black" :style="`background: var(--accent); color: var(--accentText)`">
+                      <span x-text="result.code"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
                 <div class="text-sm font-bold text-slate-800">属性比例</div>
                 <div class="mt-3 grid gap-3">
@@ -228,8 +257,8 @@
                       </div>
                       <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/60">
                         <div
-                          class="h-full rounded-full bg-gradient-to-r from-ultimate to-sky-400 transition-[width] duration-300 ease-out"
-                          :style="`width: ${dimPct(row.a,row.b).a}%`"
+                          class="h-full rounded-full transition-[width] duration-300 ease-out"
+                          :style="`width:${dimPct(row.a,row.b).a}%; background: linear-gradient(90deg, var(--accent), var(--accent2));`"
                         ></div>
                       </div>
                     </div>
@@ -257,7 +286,7 @@
                   <template x-for="(p, i) in (result.partnerSuggestions || [])" :key="i">
                     <div class="flex items-center justify-between rounded-2xl border border-white/60 bg-white/40 px-3 py-2">
                       <div class="font-semibold" x-text="p.name"></div>
-                      <div class="rounded-xl bg-ultimate/10 px-2 py-1 text-xs font-extrabold text-ultimate" x-text="p.code"></div>
+                      <div class="rounded-xl px-2 py-1 text-xs font-extrabold" :style="`background: color-mix(in oklab, var(--accent) 14%, transparent); color: var(--accent)`" x-text="p.code"></div>
                     </div>
                   </template>
                   <div x-show="!(result.partnerSuggestions && result.partnerSuggestions.length)" x-cloak class="text-slate-500">
@@ -280,7 +309,8 @@
                 重新测试
               </button>
               <button
-                class="rounded-2xl bg-ultimate px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-ultimate/30 active:scale-[0.98]"
+                class="rounded-2xl px-4 py-3 text-sm font-extrabold shadow-lg active:scale-[0.98]"
+                :style="`background: var(--accent); color: var(--accentText); box-shadow: 0 16px 34px color-mix(in oklab, var(--accent) 35%, transparent);`"
                 type="button"
                 @click="openShare = true"
               >
@@ -440,6 +470,7 @@
           dataError: "",
           resultsMap: {},
           backendAvailable: false,
+          theme: { accent: "#2563eb", accent2: "#38bdf8", accentText: "#ffffff" },
 
           async init() {
             await this.loadData();
@@ -608,9 +639,88 @@
           finish() {
             const code = this.computeCode();
             this.result = this.lookupResult(code);
+            this.resetTheme();
+            // 异步提取图片主色并应用到结果页主题色
+            this.applyThemeFromResultImage(code);
             this.stage = "result";
             this.openShare = false;
             this.fadeState = "in";
+          },
+
+          resetTheme() {
+            this.theme = { accent: "#2563eb", accent2: "#38bdf8", accentText: "#ffffff" };
+          },
+
+          resultImageUrl() {
+            const code = (this.result && this.result.code) ? this.result.code : "";
+            // 相对路径：兼容本地、server.py、GitHub Pages
+            return `image/fbti/${code}.png`;
+          },
+
+          onResultImgLoad(evt) {
+            try {
+              const img = evt && evt.target ? evt.target : null;
+              if (!img) return;
+              const accent = this.extractDominantColor(img);
+              if (accent) this.setThemeAccent(accent);
+            } catch (e) {
+              // ignore
+            }
+          },
+
+          onResultImgError() {
+            // 图片缺失时保持默认主题
+            this.resetTheme();
+          },
+
+          applyThemeFromResultImage(code) {
+            // 预加载图片，尽早设置主题；最终仍以 <img @load> 为准
+            const url = `image/fbti/${code}.png`;
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+              const accent = this.extractDominantColor(img);
+              if (accent) this.setThemeAccent(accent);
+            };
+            img.onerror = () => {};
+            img.src = url;
+          },
+
+          setThemeAccent(rgb) {
+            const { r, g, b } = rgb;
+            const accent = `rgb(${r}, ${g}, ${b})`;
+            // accent2：简单提亮一点（向白色靠近）
+            const accent2 = `rgb(${Math.min(255, Math.round(r * 0.78 + 255 * 0.22))}, ${Math.min(255, Math.round(g * 0.78 + 255 * 0.22))}, ${Math.min(255, Math.round(b * 0.78 + 255 * 0.22))})`;
+            const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+            const accentText = luminance > 0.72 ? "#0b1220" : "#ffffff";
+            this.theme = { accent, accent2, accentText };
+          },
+
+          extractDominantColor(imgEl) {
+            // 低成本采样：缩小到 32x32，忽略近白/近黑/透明像素，求平均
+            const canvas = document.createElement("canvas");
+            const size = 32;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext("2d", { willReadFrequently: true });
+            if (!ctx) return null;
+            ctx.drawImage(imgEl, 0, 0, size, size);
+            const { data } = ctx.getImageData(0, 0, size, size);
+            let r = 0, g = 0, b = 0, n = 0;
+            for (let i = 0; i < data.length; i += 4) {
+              const a = data[i + 3];
+              if (a < 200) continue;
+              const rr = data[i], gg = data[i + 1], bb = data[i + 2];
+              const maxv = Math.max(rr, gg, bb);
+              const minv = Math.min(rr, gg, bb);
+              // skip near white / near black / low saturation
+              if (maxv > 245 && minv > 235) continue;
+              if (maxv < 25) continue;
+              if (maxv - minv < 18) continue;
+              r += rr; g += gg; b += bb; n += 1;
+            }
+            if (!n) return null;
+            return { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) };
           },
 
           computeCode() {
