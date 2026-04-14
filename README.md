@@ -1,110 +1,106 @@
-# FBTI（飞盘人格测试）服务运行指南
+# FBTI（Frisbee Behavior Type Indicator）
 
-这是一个移动端优先的单页应用（`index.html`），并配套一个轻量后端（`server.py`）用于：
+一个移动端优先的飞盘人格测试 SPA（模仿 MBTI 的玩法）。前端技术栈为 **HTML + Tailwind（CDN）+ Alpine.js**。
 
-- 托管页面与 JSON 数据（`questions.json` / `results.json`）
-- 记录“登录/进入”信息到本地文件（`data/logins.ndjson`）
+本仓库提供两种使用方式：
 
-## 目录结构
+- **纯静态部署**：适合 GitHub Pages（不需要后端）
+- **可选后端**（`server.py`）：用于本地/服务器托管静态资源，并记录访问日志到本地文件（可选）
 
-- `index.html`：前端 SPA
-- `questions.json`：题库数据
-- `results.json`：结果映射数据（含 `partnerSuggestions` / `logic`）
-- `server.py`：Python 后端（静态托管 + 记录登录）
-- `data/logins.ndjson`：登录记录（NDJSON，一行一个 JSON）
+## 在线访问（GitHub Pages）
 
-## 环境要求
+如果仓库启用了 GitHub Pages，你可以直接打开 Pages 地址访问（无需安装依赖）。
 
-- Python 3（推荐 3.10+；本项目在 Python 3.13 可用）
+## 本地运行
 
-## 启动服务（本机）
+由于浏览器安全策略，直接双击打开 `index.html`（`file://`）时可能无法读取 `questions.json` / `results.json`。
+建议用下面任一方式启动本地静态服务：
 
-在项目目录执行：
+### 方式 A：使用本仓库自带 Python 服务（推荐）
 
 ```bash
-cd /data/minzhi/agent/fbti
 python3 server.py
 ```
 
-默认监听：`0.0.0.0:8787`
+然后访问 `http://127.0.0.1:8787/`。
 
-打开浏览器访问：
+### 方式 B：任意静态服务器
 
-- 本机：`http://127.0.0.1:8787/`
-
-### 自定义端口/监听地址（可选）
+例如：
 
 ```bash
-# 改端口
-FBTI_PORT=8787 python3 server.py
-
-# 只监听本机（不允许局域网访问）
-FBTI_HOST=127.0.0.1 python3 server.py
+python3 -m http.server 8787
 ```
 
-## 其他设备如何访问（同一 Wi-Fi/局域网）
+或：
 
-1. 确保你的手机/其他电脑 **和服务器在同一个局域网**（同一 Wi-Fi / 同一网段）。
-2. 找到服务器的局域网 IP：
+```bash
+npx serve .
+```
+
+### 离线整合版（可选）
+
+如果你希望单文件打开即可运行，可以使用 `standalone.html`（题库与结果映射已内置）。
+
+## 目录结构
+
+- `index.html`：主版本（读取 `questions.json` / `results.json`）
+- `standalone.html`：离线整合版（内置题库和结果映射）
+- `questions.json`：题库数据
+- `results.json`：结果映射数据（含 `partnerSuggestions` / `logic`）
+- `image/fbti/`：16 种人格对应的结果图片（文件名为 `HSVW.png` 这类代码）
+- `server.py`：可选 Python 服务（静态托管 + 记录日志）
+- `data/logins.ndjson`：日志文件（NDJSON，一行一个 JSON）
+
+## 在其他设备上访问（同一 Wi‑Fi / 局域网）
+
+1. 确保手机/电脑与运行服务的机器在同一局域网（同一 Wi‑Fi）。
+2. 在服务所在机器上找到局域网 IP：
 
 ```bash
 ip -4 addr | sed -n 's/.*inet \\([0-9.]*\\)\\/.*/\\1/p'
 ```
 
-一般会看到类似 `192.168.x.x` 或 `10.x.x.x` 的地址，选那个是你正在用的网卡对应的 IP。
-
-3. 在手机浏览器输入：
+3. 在其他设备浏览器打开：
 
 - `http://<你的局域网IP>:8787/`
 
-示例：
+示例：`http://192.168.1.23:8787/`
 
-- `http://192.168.1.23:8787/`
+### 常见问题
 
-### 常见问题排查
-
-- **能访问 `127.0.0.1`，但手机访问不了**
-  - 确认服务监听的是 `0.0.0.0`（默认就是）
-  - 确认服务器防火墙放行端口 `8787`
+- **其他设备打不开**
+  - 确认服务监听的是 `0.0.0.0`（`server.py` 默认如此）
+  - 确认防火墙放行端口 `8787`
   - 确认路由器/热点没有开启“客户端隔离（AP isolation）”
 - **端口被占用**
-  - 换端口：`FBTI_PORT=8790 python3 server.py`
-- **不要用双击打开 `index.html`**
-  - `file://` 模式下浏览器会限制 `fetch` 读取 `questions.json/results.json`，必须通过 `server.py` 访问。
+  - 使用其它端口：`FBTI_PORT=8790 python3 server.py`
+- **题库加载失败**
+  - 请通过 `http://` 访问（不要 `file://` 打开 `index.html`）
+  - 或直接打开 `standalone.html`
 
-## 查看登录记录
+## 可选后端：日志与 API
 
-### 文件方式
-
-登录记录会写入：
+当使用 `server.py` 启动时，会写入：
 
 - `data/logins.ndjson`
 
-每行一个 JSON，字段包含 `ts`、`nickname`、`team`、`ip`、`ua` 等。
-
-### API 方式
+可用 API：
 
 - 健康检查：`GET /api/health`
-- 记录登录：`POST /api/login`
-- 查看登录：`GET /api/logins?limit=100`
-
-例子：
+- 记录日志：`POST /api/login`
+- 查询日志：`GET /api/logins?limit=100`
 
 ```bash
 curl -sS "http://127.0.0.1:8787/api/logins?limit=20"
 ```
 
-## 公网转发给大家（可选）
+## 公网分享（可选）
 
-如果你希望不在同一局域网的人也能访问，常见做法：
+如果你希望不在同一局域网的人也能访问：
 
-### 方案 A：反向代理/已有服务器（推荐）
+- **推荐**：把服务跑在有公网 IP 的服务器上，用 Nginx/Caddy 反代到 `127.0.0.1:8787` 并配置 HTTPS
+- **临时**：使用内网穿透（frp / cloudflared tunnel / ngrok 等）
 
-把 `server.py` 跑在一台有公网 IP 的机器上，然后在 Nginx/Caddy 上做反代到 `127.0.0.1:8787`，对外提供 `https://...`。
-
-### 方案 B：内网穿透（临时分享）
-
-如果你没有公网服务器，可以用内网穿透工具把 `8787` 暴露出去（例如 frp / cloudflared tunnel / ngrok 等）。
-
-注意：这会把你的服务暴露到公网；本服务目前**没有鉴权**，只适合临时演示或小范围分享。
+注意：`server.py` 目前**没有鉴权**，仅适合演示或小范围分享。
 
