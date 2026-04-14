@@ -449,8 +449,9 @@
             this.dataError = "";
             try {
               const [qRes, rRes] = await Promise.all([
-                fetch("/questions.json", { cache: "no-store" }),
-                fetch("/results.json", { cache: "no-store" }),
+                // 用相对路径以兼容 GitHub Pages（通常在 /<repo>/ 下）
+                fetch("questions.json", { cache: "no-store" }),
+                fetch("results.json", { cache: "no-store" }),
               ]);
               if (!qRes.ok) throw new Error(`questions_http_${qRes.status}`);
               if (!rRes.ok) throw new Error(`results_http_${rRes.status}`);
@@ -489,6 +490,14 @@
 
           async submitLoginAndStart() {
             if (!this.user.nickname) return;
+            if (this.dataBusy) {
+              this.loginStatus = "数据加载中，请稍等…";
+              return;
+            }
+            if (!this.questions.length) {
+              this.loginStatus = this.dataError || "题库未加载成功，请确认 questions.json / results.json 可访问。";
+              return;
+            }
             this.loginBusy = true;
             this.loginStatus = "正在记录登录信息…";
             try {
@@ -524,7 +533,7 @@
           },
 
           currentQuestion() {
-            return this.questions[this.currentIndex];
+            return this.questions[this.currentIndex] || { q: "", options: [] };
           },
 
           progressPct() {
