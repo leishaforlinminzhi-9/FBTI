@@ -169,7 +169,7 @@
             </div>
 
             <div class="mt-4 grid gap-3">
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4 shadow-lg shadow-ultimate/10">
                 <div class="text-sm font-bold text-slate-800">属性比例</div>
                 <div class="mt-3 grid gap-3">
                   <template x-for="row in [
@@ -187,20 +187,27 @@
                           <span class="font-extrabold text-ink" x-text="`${row.b} ${dimPct(row.a,row.b).b}%`"></span>
                         </div>
                       </div>
-                      <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/60">
-                        <div class="h-full rounded-full bg-gradient-to-r from-ultimate to-sky-400 transition-[width] duration-300 ease-out" :style="`width: ${dimPct(row.a,row.b).a}%`"></div>
+                      <div class="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-white/60">
+                        <div
+                          class="h-full transition-[width] duration-300 ease-out"
+                          :style="`width:${dimPct(row.a,row.b).a}%; background: linear-gradient(90deg, #1d4ed8, #2563eb);`"
+                        ></div>
+                        <div
+                          class="h-full transition-[width] duration-300 ease-out"
+                          :style="`width:${dimPct(row.a,row.b).b}%; background: linear-gradient(90deg, rgba(148,163,184,.9), rgba(203,213,225,.95));`"
+                        ></div>
                       </div>
                     </div>
                   </template>
                 </div>
               </div>
 
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4 shadow-lg shadow-ultimate/10">
                 <div class="text-sm font-bold text-slate-800">性格描述</div>
                 <p class="mt-2 text-sm leading-relaxed text-slate-700" x-text="result.desc"></p>
               </div>
 
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4 shadow-lg shadow-ultimate/10">
                 <div class="text-sm font-bold text-slate-800">场上优势</div>
                 <ul class="mt-2 space-y-2 text-sm text-slate-700">
                   <template x-for="(p, i) in result.pros" :key="i">
@@ -209,7 +216,7 @@
                 </ul>
               </div>
 
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4 shadow-lg shadow-ultimate/10">
                 <div class="text-sm font-bold text-slate-800">建议搭档</div>
                 <div class="mt-2 grid gap-2 text-sm text-slate-700">
                   <template x-for="(p, i) in (result.partnerSuggestions || [])" :key="i">
@@ -221,7 +228,7 @@
                 </div>
               </div>
 
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4" x-show="result.logic" x-cloak>
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4 shadow-lg shadow-ultimate/10" x-show="result.logic" x-cloak>
                 <div class="text-sm font-bold text-slate-800">搭档逻辑</div>
                 <p class="mt-2 text-sm leading-relaxed text-slate-700" x-text="result.logic"></p>
               </div>

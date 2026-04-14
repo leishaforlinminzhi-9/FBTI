@@ -194,7 +194,7 @@
       <main x-show="stage === 'result'" x-transition.opacity.duration.250ms x-cloak>
         <section
           class="relative overflow-hidden rounded-2xl p-[1px] shadow-soft"
-          :style="`--accent:${theme.accent};--accent2:${theme.accent2};--accentText:${theme.accentText};`"
+          :style="`--accent:${theme.accent};--accentDark:${theme.accentDark};--accent2:${theme.accent2};--accentText:${theme.accentText};`"
         >
           <!-- gradient border -->
           <div
@@ -220,10 +220,13 @@
             </div>
 
             <div class="mt-4 grid gap-3">
-              <div class="overflow-hidden rounded-2xl border border-white/50 bg-white/50">
+              <div
+                class="overflow-hidden rounded-2xl border border-white/50 bg-white/50"
+                :style="`box-shadow: 0 14px 32px color-mix(in oklab, var(--accent) 14%, transparent);`"
+              >
                 <div class="relative">
                   <img
-                    class="h-auto w-full object-cover"
+                    class="h-[220px] w-full object-cover"
                     :src="resultImageUrl()"
                     :alt="`FBTI ${result.code}`"
                     @load="onResultImgLoad($event)"
@@ -240,7 +243,10 @@
                   </div>
                 </div>
               </div>
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+              <div
+                class="rounded-2xl border border-white/50 bg-white/50 p-4"
+                :style="`box-shadow: 0 14px 32px color-mix(in oklab, var(--accent) 10%, transparent);`"
+              >
                 <div class="text-sm font-bold text-slate-800">属性比例</div>
                 <div class="mt-3 grid gap-3">
                   <template x-for="row in [
@@ -258,32 +264,45 @@
                           <span class="font-extrabold text-ink" x-text="`${row.b} ${dimPct(row.a,row.b).b}%`"></span>
                         </div>
                       </div>
-                      <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/60">
+                      <div class="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-white/60">
                         <div
-                          class="h-full rounded-full transition-[width] duration-300 ease-out"
-                          :style="`width:${dimPct(row.a,row.b).a}%; background: linear-gradient(90deg, var(--accent), var(--accent2));`"
+                          class="h-full transition-[width] duration-300 ease-out"
+                          :style="`width:${dimPct(row.a,row.b).a}%; background: linear-gradient(90deg, var(--accentDark), var(--accent));`"
+                        ></div>
+                        <div
+                          class="h-full transition-[width] duration-300 ease-out"
+                          :style="`width:${dimPct(row.a,row.b).b}%; background: linear-gradient(90deg, color-mix(in oklab, var(--accent2) 30%, white), color-mix(in oklab, var(--accent) 22%, white));`"
                         ></div>
                       </div>
                     </div>
                   </template>
                 </div>
               </div>
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+              <div
+                class="rounded-2xl border border-white/50 bg-white/50 p-4"
+                :style="`box-shadow: 0 14px 32px color-mix(in oklab, var(--accent) 10%, transparent);`"
+              >
                 <div class="text-sm font-bold text-slate-800">性格描述</div>
                 <p class="mt-2 text-sm leading-relaxed text-slate-700" x-text="result.desc"></p>
               </div>
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+              <div
+                class="rounded-2xl border border-white/50 bg-white/50 p-4"
+                :style="`box-shadow: 0 14px 32px color-mix(in oklab, var(--accent) 10%, transparent);`"
+              >
                 <div class="text-sm font-bold text-slate-800">场上优势</div>
                 <ul class="mt-2 space-y-2 text-sm text-slate-700">
                   <template x-for="(p, i) in result.pros" :key="i">
                     <li class="flex gap-2">
-                      <span class="mt-1.5 h-2 w-2 rounded-full bg-ultimate"></span>
+                      <span class="mt-1.5 h-2 w-2 rounded-full" :style="`background: var(--accent)`"></span>
                       <span x-text="p"></span>
                     </li>
                   </template>
                 </ul>
               </div>
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+              <div
+                class="rounded-2xl border border-white/50 bg-white/50 p-4"
+                :style="`box-shadow: 0 14px 32px color-mix(in oklab, var(--accent) 10%, transparent);`"
+              >
                 <div class="text-sm font-bold text-slate-800">建议搭档</div>
                 <div class="mt-2 grid gap-2 text-sm text-slate-700">
                   <template x-for="(p, i) in (result.partnerSuggestions || [])" :key="i">
@@ -297,7 +316,12 @@
                   </div>
                 </div>
               </div>
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4" x-show="result.logic" x-cloak>
+              <div
+                class="rounded-2xl border border-white/50 bg-white/50 p-4"
+                :style="`box-shadow: 0 14px 32px color-mix(in oklab, var(--accent) 10%, transparent);`"
+                x-show="result.logic"
+                x-cloak
+              >
                 <div class="text-sm font-bold text-slate-800">搭档逻辑</div>
                 <p class="mt-2 text-sm leading-relaxed text-slate-700" x-text="result.logic"></p>
               </div>
@@ -466,7 +490,7 @@
           dataError: "",
           resultsMap: {},
           backendAvailable: false,
-          theme: { accent: "#2563eb", accent2: "#38bdf8", accentText: "#ffffff" },
+          theme: { accent: "#2563eb", accentDark: "#1d4ed8", accent2: "#38bdf8", accentText: "#ffffff" },
 
           async init() {
             await this.loadData();
@@ -644,7 +668,7 @@
           },
 
           resetTheme() {
-            this.theme = { accent: "#2563eb", accent2: "#38bdf8", accentText: "#ffffff" };
+            this.theme = { accent: "#2563eb", accentDark: "#1d4ed8", accent2: "#38bdf8", accentText: "#ffffff" };
           },
 
           resultImageUrl() {
@@ -685,11 +709,13 @@
           setThemeAccent(rgb) {
             const { r, g, b } = rgb;
             const accent = `rgb(${r}, ${g}, ${b})`;
+            // accentDark：向黑色压一档，让左段更“深”
+            const accentDark = `rgb(${Math.max(0, Math.round(r * 0.74))}, ${Math.max(0, Math.round(g * 0.74))}, ${Math.max(0, Math.round(b * 0.74))})`;
             // accent2：简单提亮一点（向白色靠近）
             const accent2 = `rgb(${Math.min(255, Math.round(r * 0.78 + 255 * 0.22))}, ${Math.min(255, Math.round(g * 0.78 + 255 * 0.22))}, ${Math.min(255, Math.round(b * 0.78 + 255 * 0.22))})`;
             const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
             const accentText = luminance > 0.72 ? "#0b1220" : "#ffffff";
-            this.theme = { accent, accent2, accentText };
+            this.theme = { accent, accentDark, accent2, accentText };
           },
 
           extractDominantColor(imgEl) {
