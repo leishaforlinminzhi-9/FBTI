@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FBTI 飞盘人格测试</title>
+    <meta name="description" content="FBTI（Frisbee Behavior Type Indicator）飞盘人格测试：发现你的赛场灵魂原型。" />
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { ultimate: "#2563eb", disc: "#f8fafc", ink: "#0b1220" },
+            boxShadow: { soft: "0 18px 40px rgba(2, 6, 23, 0.18)" },
+            keyframes: { pop: { "0%": { transform: "scale(0.98)" }, "100%": { transform: "scale(1)" } } },
+            animation: { pop: "pop 220ms ease-out" },
+          },
+        },
+      };
+    </script>
+
+    <!-- Alpine.js (CDN) -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+      * { -webkit-tap-highlight-color: transparent; }
+      [x-cloak] { display: none !important; }
+    </style>
+  </head>
+
+  <body class="min-h-dvh bg-gradient-to-b from-disc to-white text-slate-900 selection:bg-ultimate/20">
+    <div class="mx-auto min-h-dvh w-full max-w-[480px] px-4 py-6" x-data="fbtiStandalone()" x-init="init()">
+      <header class="mb-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="grid h-10 w-10 place-items-center rounded-2xl bg-ultimate text-white shadow-lg shadow-ultimate/20">
+            <span class="text-lg font-black">F</span>
+          </div>
+          <div class="leading-tight">
+            <div class="text-sm font-semibold text-slate-700">FBTI</div>
+            <div class="text-xs text-slate-500">Frisbee Behavior Type Indicator</div>
+          </div>
+        </div>
+        <button
+          class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white active:scale-[0.98]"
+          type="button"
+          @click="openAbout = true"
+        >
+          说明
+        </button>
+      </header>
+
+      <!-- Stage: Start -->
+      <main x-show="stage === 'start'" x-transition.opacity.duration.250ms class="animate-pop">
+        <section class="rounded-2xl bg-white/70 p-5 shadow-soft backdrop-blur">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h1 class="text-2xl font-black tracking-tight text-ink">🚀 FBTI 飞盘人格测试</h1>
+              <p class="mt-2 text-sm text-slate-600">发现你的赛场灵魂原型</p>
+            </div>
+            <div class="rounded-2xl bg-ultimate/10 px-3 py-2 text-xs font-semibold text-ultimate">Mobile-First</div>
+          </div>
+
+          <div class="mt-5 grid gap-3">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+              <div class="text-sm font-bold text-slate-800">你会得到什么？</div>
+              <ul class="mt-2 space-y-2 text-sm text-slate-600">
+                <li class="flex gap-2"><span class="mt-0.5 h-2 w-2 rounded-full bg-ultimate"></span>4 维度：控盘 / 跑位、稳健 / 尝试、沟通 / 执行、快乐 / 竞技</li>
+                <li class="flex gap-2"><span class="mt-0.5 h-2 w-2 rounded-full bg-ultimate"></span>4 位代码 + 人格称号 + 场上优势 + 搭档建议</li>
+              </ul>
+            </div>
+
+            <button
+              class="group relative overflow-hidden rounded-2xl bg-ultimate px-5 py-4 text-left text-white shadow-lg shadow-ultimate/30 active:scale-[0.98]"
+              type="button"
+              @click="beginFlow()"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-base font-black tracking-tight">开始测试</div>
+                  <div class="mt-0.5 text-xs text-white/80">上场前先测一测，别当隐形人</div>
+                </div>
+                <div class="grid h-10 w-10 place-items-center rounded-2xl bg-white/15">
+                  <span class="text-lg">➜</span>
+                </div>
+              </div>
+              <div class="pointer-events-none absolute -right-12 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl transition group-hover:translate-x-2"></div>
+            </button>
+
+            <div class="text-center text-xs text-slate-500">不收集任何个人信息</div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Stage: Quiz -->
+      <main x-show="stage === 'quiz'" x-transition.opacity.duration.200ms x-cloak>
+        <section class="rounded-2xl bg-white/75 p-5 shadow-soft backdrop-blur">
+          <div class="mb-4">
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-600">
+              <div>进度</div>
+              <div><span x-text="currentIndex + 1"></span>/<span x-text="questions.length"></span></div>
+            </div>
+            <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div class="h-full rounded-full bg-ultimate transition-[width] duration-300 ease-out" :style="`width: ${progressPct()}%`"></div>
+            </div>
+          </div>
+
+          <div class="min-h-[160px]">
+            <div x-show="fadeState === 'in'" x-transition.opacity.duration.180ms>
+              <div class="text-xs font-semibold text-ultimate/90">
+                <span class="rounded-xl bg-ultimate/10 px-3 py-1">飞盘场景题</span>
+              </div>
+              <h2 class="mt-3 text-xl font-black leading-snug tracking-tight text-ink" x-text="currentQuestion().q"></h2>
+            </div>
+          </div>
+
+          <div class="mt-4 grid gap-3">
+            <template x-for="(opt, idx) in currentQuestion().options" :key="idx">
+              <button
+                type="button"
+                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition active:scale-[0.98] active:border-ultimate/40"
+                @click="answer(idx)"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-slate-50 text-sm font-black text-slate-800">
+                    <span x-text="idx === 0 ? 'A' : 'B'"></span>
+                  </div>
+                  <div class="flex-1">
+                    <div class="text-base font-extrabold text-slate-900" x-text="opt.text"></div>
+                  </div>
+                </div>
+              </button>
+            </template>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between">
+            <button
+              class="rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 active:scale-[0.98]"
+              type="button"
+              :disabled="currentIndex === 0"
+              :class="currentIndex === 0 ? 'opacity-40' : ''"
+              @click="backOne()"
+            >
+              上一题
+            </button>
+            <button class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white active:scale-[0.98]" type="button" @click="restart()">
+              重新开始
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <!-- Stage: Result -->
+      <main x-show="stage === 'result'" x-transition.opacity.duration.250ms x-cloak>
+        <section class="relative overflow-hidden rounded-2xl p-[1px] shadow-soft">
+          <div class="absolute inset-0 bg-gradient-to-br from-ultimate/70 via-sky-400/50 to-emerald-300/40"></div>
+          <div class="relative rounded-2xl bg-white/70 p-5 backdrop-blur">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="text-xs font-semibold text-slate-600">你的类型</div>
+                <div class="mt-1 text-3xl font-black tracking-tight text-ink"><span x-text="result.code"></span></div>
+                <div class="mt-1 text-sm font-extrabold text-ultimate" x-text="result.title"></div>
+              </div>
+              <div class="rounded-2xl bg-ultimate px-3 py-2 text-xs font-bold text-white shadow-lg shadow-ultimate/25">FBTI</div>
+            </div>
+
+            <div class="mt-4 grid gap-3">
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+                <div class="text-sm font-bold text-slate-800">属性比例</div>
+                <div class="mt-3 grid gap-3">
+                  <template x-for="row in [
+                    { a: 'H', b: 'C', name: '控盘 H / 跑位 C' },
+                    { a: 'S', b: 'G', name: '稳健 S / 尝试 G' },
+                    { a: 'V', b: 'A', name: '沟通 V / 执行 A' },
+                    { a: 'F', b: 'W', name: '快乐 F / 竞技 W' },
+                  ]" :key="row.a">
+                    <div>
+                      <div class="flex items-center justify-between text-xs font-semibold text-slate-600">
+                        <div x-text="row.name"></div>
+                        <div class="text-slate-700">
+                          <span class="font-extrabold text-ink" x-text="`${row.a} ${dimPct(row.a,row.b).a}%`"></span>
+                          <span class="mx-1 text-slate-400">·</span>
+                          <span class="font-extrabold text-ink" x-text="`${row.b} ${dimPct(row.a,row.b).b}%`"></span>
+                        </div>
+                      </div>
+                      <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/60">
+                        <div class="h-full rounded-full bg-gradient-to-r from-ultimate to-sky-400 transition-[width] duration-300 ease-out" :style="`width: ${dimPct(row.a,row.b).a}%`"></div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+                <div class="text-sm font-bold text-slate-800">性格描述</div>
+                <p class="mt-2 text-sm leading-relaxed text-slate-700" x-text="result.desc"></p>
+              </div>
+
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+                <div class="text-sm font-bold text-slate-800">场上优势</div>
+                <ul class="mt-2 space-y-2 text-sm text-slate-700">
+                  <template x-for="(p, i) in result.pros" :key="i">
+                    <li class="flex gap-2"><span class="mt-1.5 h-2 w-2 rounded-full bg-ultimate"></span><span x-text="p"></span></li>
+                  </template>
+                </ul>
+              </div>
+
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+                <div class="text-sm font-bold text-slate-800">建议搭档</div>
+                <div class="mt-2 grid gap-2 text-sm text-slate-700">
+                  <template x-for="(p, i) in (result.partnerSuggestions || [])" :key="i">
+                    <div class="flex items-center justify-between rounded-2xl border border-white/60 bg-white/40 px-3 py-2">
+                      <div class="font-semibold" x-text="p.name"></div>
+                      <div class="rounded-xl bg-ultimate/10 px-2 py-1 text-xs font-extrabold text-ultimate" x-text="p.code"></div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4" x-show="result.logic" x-cloak>
+                <div class="text-sm font-bold text-slate-800">搭档逻辑</div>
+                <p class="mt-2 text-sm leading-relaxed text-slate-700" x-text="result.logic"></p>
+              </div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <button class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-extrabold text-slate-800 shadow-sm active:scale-[0.98]" type="button" @click="restart()">
+                重新测试
+              </button>
+              <button class="rounded-2xl bg-ultimate px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-ultimate/30 active:scale-[0.98]" type="button" @click="openShare = true">
+                分享截图（UI模拟）
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- About modal -->
+      <div x-show="openAbout" x-transition.opacity x-cloak class="fixed inset-0 z-50 grid place-items-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="openAbout=false"></div>
+        <div class="relative w-full max-w-[480px] rounded-2xl bg-white p-5 shadow-soft">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-base font-black text-ink">FBTI 维度说明</div>
+              <div class="mt-1 text-xs text-slate-500">每题二选一，选项会给某个字母加 1 分</div>
+            </div>
+            <button class="rounded-xl px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100" @click="openAbout=false" type="button">×</button>
+          </div>
+          <div class="mt-4 grid gap-3 text-sm text-slate-700">
+            <div class="rounded-2xl bg-slate-50 p-4"><div class="font-extrabold text-slate-800">H / C</div><div class="mt-1 text-slate-600">Handler 控盘（拿盘组织） vs Cutter 跑位（无盘切入）</div></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><div class="font-extrabold text-slate-800">S / G</div><div class="mt-1 text-slate-600">Steady 稳健（高成功率选择） vs Gambler 尝试（敢打敢赌）</div></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><div class="font-extrabold text-slate-800">V / A</div><div class="mt-1 text-slate-600">Vocal 沟通（指挥/读场） vs Action 执行（以行动带节奏）</div></div>
+            <div class="rounded-2xl bg-slate-50 p-4"><div class="font-extrabold text-slate-800">F / W</div><div class="mt-1 text-slate-600">Fun 快乐（享受 flow） vs Win 竞技（赢盘优先）</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Share modal (UI simulation) -->
+      <div x-show="openShare" x-transition.opacity x-cloak class="fixed inset-0 z-50 grid place-items-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="openShare=false"></div>
+        <div class="relative w-full max-w-[480px] overflow-hidden rounded-2xl bg-white shadow-soft">
+          <div class="bg-gradient-to-r from-ultimate to-sky-500 px-5 py-4 text-white">
+            <div class="text-base font-black">分享结果（UI 模拟）</div>
+            <div class="mt-1 text-xs text-white/80">无法真正生成图片（未引入额外库），但可复制海报文案并提示截图</div>
+          </div>
+          <div class="p-5">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div class="text-xs font-semibold text-slate-500">可复制文案</div>
+              <div class="mt-2 whitespace-pre-wrap text-sm font-semibold text-slate-800" x-text="shareText()"></div>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <button class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-extrabold text-slate-800 shadow-sm active:scale-[0.98]" type="button" @click="copyShare()">复制文案</button>
+              <button class="rounded-2xl bg-ultimate px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-ultimate/25 active:scale-[0.98]" type="button" @click="openShare=false">我去截图</button>
+            </div>
+            <div class="mt-3 text-xs text-slate-500">
+              建议：长按或系统截图即可分享。若你想要一键生成海报图，可以再告诉我引入 `html2canvas`。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login modal -->
+      <div x-show="openLogin" x-transition.opacity x-cloak class="fixed inset-0 z-50 grid place-items-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="openLogin=false"></div>
+        <div class="relative w-full max-w-[480px] rounded-2xl bg-white p-5 shadow-soft">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-base font-black text-ink">先报个名再上场</div>
+              <div class="mt-1 text-xs text-slate-500">我们会记录昵称/队伍（用于“登录信息”统计），不记录密码</div>
+            </div>
+            <button class="rounded-xl px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100" @click="openLogin=false" type="button">×</button>
+          </div>
+          <div class="mt-4 grid gap-3">
+            <label class="grid gap-1">
+              <div class="text-xs font-semibold text-slate-600">昵称（必填）</div>
+              <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-ultimate/50 focus:ring-4 focus:ring-ultimate/10" placeholder="比如：DumpKing / Layout姐" x-model.trim="user.nickname" maxlength="32" />
+            </label>
+            <label class="grid gap-1">
+              <div class="text-xs font-semibold text-slate-600">队伍/城市（可选）</div>
+              <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-ultimate/50 focus:ring-4 focus:ring-ultimate/10" placeholder="比如：上海 / 燃烧吧飞盘" x-model.trim="user.team" maxlength="64" />
+            </label>
+            <div class="mt-1 flex items-center justify-between gap-3">
+              <div class="text-xs text-slate-500" x-text="loginStatus"></div>
+              <button
+                class="rounded-2xl bg-ultimate px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-ultimate/25 active:scale-[0.98] disabled:opacity-50"
+                type="button"
+                :disabled="loginBusy || !user.nickname"
+                @click="submitLoginAndStart()"
+              >
+                <span x-show="!loginBusy">进入测试</span>
+                <span x-show="loginBusy" x-cloak>提交中…</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 内嵌数据（由 questions.json / results.json 整合而来）
+      const FBTI_QUESTIONS = [
+  {
+    "dim": "HC",
+    "q": "开盘拿到盘，你更自然会做什么？",
+    "hint": "看你是更偏控盘组织，还是更偏无盘跑位制造机会。",
+    "options": [
+      { "text": "先找 Dump / Swing，把队形拉开再推进", "type": "H", "scores": { "H": 1, "S": 1 } },
+      { "text": "先跑一个深切或 ISO，逼对面出反应", "type": "C", "scores": { "C": 1, "G": 1 } }
+    ]
+  },
+  {
+    "dim": "SG",
+    "q": "你看到对面防守一瞬间失位，你会？",
+    "hint": "高成功率选择 vs 敢打敢赌的机会球。",
+    "options": [
+      { "text": "继续短传推进，等更稳的窗口出现", "type": "S", "scores": { "S": 2 } },
+      { "text": "现在不打就没了，立刻 Huck 一个长传", "type": "G", "scores": { "G": 2 } }
+    ]
+  },
+  {
+    "dim": "VA",
+    "q": "场上局势乱、队友有点懵，你通常怎么带节奏？",
+    "hint": "用沟通组织 vs 用动作示范。",
+    "options": [
+      { "text": "大声提示 stall 数并 call 出明确的站位", "type": "V", "scores": { "V": 2 } },
+      { "text": "直接给一个高质量切入或接盘来示范节奏", "type": "A", "scores": { "A": 2 } }
+    ]
+  },
+  {
+    "dim": "FW",
+    "q": "比分胶着来到关键分（Universe point），你更在意？",
+    "hint": "享受 flow vs 胜负优先。",
+    "options": [
+      { "text": "打出流畅的队形和配合，享受这种丝滑感", "type": "F", "scores": { "F": 2 } },
+      { "text": "不玩花的，只用最高效的纪律动作赢下来", "type": "W", "scores": { "W": 2 } }
+    ]
+  },
+  {
+    "dim": "HC",
+    "q": "你更喜欢在哪个位置“发光”？",
+    "hint": "拿盘控场 vs 无盘得分。",
+    "options": [
+      { "text": "在后场通过 Swing 和 Break 梳理进攻逻辑", "type": "H", "scores": { "H": 2 } },
+      { "text": "在前场冲刺吃掉空档，接盘直接完成终结", "type": "C", "scores": { "C": 2 } }
+    ]
+  },
+  {
+    "dim": "SG",
+    "q": "你更愿意在什么时候进行 Layout？",
+    "hint": "稳健更偏“必须的布局”，尝试更偏“敢搏一把”。",
+    "options": [
+      { "text": "我有百分之百把握能拿到盘时才飞扑", "type": "S", "scores": { "S": 1, "W": 1 } },
+      { "text": "哪怕只有一半机会也愿意飞出去试一把", "type": "G", "scores": { "G": 1, "F": 1 } }
+    ]
+  },
+  {
+    "dim": "VA",
+    "q": "队友切线不清晰导致撞车，你更可能怎么做？",
+    "hint": "说清楚 vs 做出来。",
+    "options": [
+      { "text": "立刻提醒空间位置并给出清晰的切线口令", "type": "V", "scores": { "V": 1, "S": 1 } },
+      { "text": "带头做一个标准的切线，把队友引导到位", "type": "A", "scores": { "A": 1, "C": 1 } }
+    ]
+  },
+  {
+    "dim": "FW",
+    "q": "赛后复盘，你最想聊的内容是？",
+    "hint": "快乐体验 vs 竞技提升。",
+    "options": [
+      { "text": "聊聊刚才那个神配合有多爽，氛围有多炸", "type": "F", "scores": { "F": 2 } },
+      { "text": "总结失误原因，讨论战术要怎么改才能赢", "type": "W", "scores": { "W": 2 } }
+    ]
+  },
+  {
+    "dim": "SG",
+    "q": "当 Stall 数已经来到 7 或者 8，你会？",
+    "hint": "看你在压力下的出盘选择。",
+    "options": [
+      { "text": "强行找最近的 Dump 哪怕盘权转移很危险", "type": "S", "scores": { "S": 1, "H": 1 } },
+      { "text": "往 Endzone 高高挂起一个 Float 球赌一把", "type": "G", "scores": { "G": 2 } }
+    ]
+  },
+  {
+    "dim": "HC",
+    "q": "防守时，你更倾向于哪种防法？",
+    "hint": "防传球者 vs 防接球者。",
+    "options": [
+      { "text": "贴死 Handler 锁掉出盘角度，干扰对方组织", "type": "H", "scores": { "H": 1, "W": 1 } },
+      { "text": "跟死 Cutter 随时准备在深处完成拦截", "type": "C", "scores": { "C": 1, "A": 1 } }
+    ]
+  },
+  {
+    "dim": "VA",
+    "q": "面对刚入坑的新人队友，你通常的表现是？",
+    "hint": "言传 vs 身教。",
+    "options": [
+      { "text": "耐心地告诉他怎么站位以及什么时候切入", "type": "V", "scores": { "V": 2 } },
+      { "text": "带着他跑几个回合，让他感受正确的节奏", "type": "A", "scores": { "A": 2 } }
+    ]
+  },
+  {
+    "dim": "FW",
+    "q": "如果一次精彩的尝试最后失误了，你会？",
+    "hint": "对失误的容忍度。",
+    "options": [
+      { "text": "鼓励队友刚才的想法很 cool，下次还敢这么打", "type": "F", "scores": { "F": 2 } },
+      { "text": "感到可惜，开始计算刚才如果求稳的得分概率", "type": "W", "scores": { "W": 2 } }
+    ]
+  },
+  {
+    "dim": "HC",
+    "q": "接盘的一瞬间，你的第一眼神通常看向哪里？",
+    "hint": "组织者视角 vs 得分者视角。",
+    "options": [
+      { "text": "横向寻找中转队友，准备进行下一步分球", "type": "H", "scores": { "H": 2 } },
+      { "text": "纵向寻找 Endzone 空档，寻找直接得分可能", "type": "C", "scores": { "C": 2 } }
+    ]
+  },
+  {
+    "dim": "SG",
+    "q": "面对对方严密的 Zone 防守（联防），你会？",
+    "hint": "耐心 vs 突破。",
+    "options": [
+      { "text": "通过无数次横传消耗对方体力，寻找裂缝", "type": "S", "scores": { "S": 2 } },
+      { "text": "尝试一记穿透性极强的飞盘直接撕开防线", "type": "G", "scores": { "G": 2 } }
+    ]
+  },
+  {
+    "dim": "VA",
+    "q": "在场下休息时，你观察比赛的方式是？",
+    "hint": "战术分析 vs 专注场上动作。",
+    "options": [
+      { "text": "和身边队友讨论刚才那个回合的战术逻辑", "type": "V", "scores": { "V": 1, "F": 1 } },
+      { "text": "全神贯注盯着盘的落点，准备随时上场接力", "type": "A", "scores": { "A": 1, "W": 1 } }
+    ]
+  },
+  {
+    "dim": "FW",
+    "q": "你心目中一场“完美”的飞盘局应该是？",
+    "hint": "体验感 vs 竞技感。",
+    "options": [
+      { "text": "大家玩得开怀，每个人都参与其中的聚会", "type": "F", "scores": { "F": 2 } },
+      { "text": "一次高强度、高水平、对抗激烈的战术博弈", "type": "W", "scores": { "W": 2 } }
+    ]
+  }
+];
+      const FBTI_RESULTS = {
+  "HSVF": {
+    "title": "盘场慈母",
+    "desc": "“宝，别急，盘给你。” 你是全队的安全感来源，控盘极稳且心态超好。比起暴力 Huck，你更喜欢用温柔的短传和耐心的 Dump 抚慰队友焦躁的心。",
+    "pros": ["稳定输出 Reset，失误率极低", "情绪价值拉满，全队奶妈", "带新能力极强，新人最爱的 Handler"],
+    "partnerSuggestions": [
+      { "name": "终结机器", "code": "CGAW" },
+      { "name": "高空轰炸机", "code": "CGVW" }
+    ],
+    "logic": "慈母的稳健需要一个能强力终结比赛的 Cutter，确保‘奶’出来的回合能转化为分数。"
+  },
+  "HSVW": {
+    "title": "精神教头",
+    "desc": "即便你不是 Captain，你也操着主教练的心。你对 Stack 结构和 Force 方向有着偏执的要求。场上指挥清晰，拒绝混乱。",
+    "pros": ["战术大脑，一眼看穿防守破绽", "场上指挥清晰，拒绝混乱局面", "关键分决策极其理智"],
+    "partnerSuggestions": [
+      { "name": "战术卷王", "code": "CSAW" },
+      { "name": "终结机器", "code": "CGAW" }
+    ],
+    "logic": "教头最需要听话、跑位教科书化的执行者，把精密的战术变成现实。"
+  },
+  "HSAF": {
+    "title": "发盘机器",
+    "desc": "你是莫得感情的衔接桥梁。你不爱喊话，但你的 Swing 和 Reset 像流水线一样标准。进攻节奏的润滑剂。",
+    "pros": ["基本功扎实得可怕", "跑动接应极其勤恳", "存在感不强但缺你不行"],
+    "partnerSuggestions": [
+      { "name": "王牌狙击", "code": "HGVW" },
+      { "name": "快乐赌徒", "code": "HGVF" }
+    ],
+    "logic": "机器负责把盘平稳送到 Handler 阵位，需要一个敢于出长传的投手来突破僵局。"
+  },
+  "HSAW": {
+    "title": "节奏大师",
+    "desc": "你是场上的“节拍器”。通过精准的短传和快速转移把对手晃到体力透支。追求极致的回合效率。",
+    "pros": ["极致的回合续航能力", "擅长用节奏转换撕开 Break 窗口", "高压环境下出盘依然精准"],
+    "partnerSuggestions": [
+      { "name": "灵动幽灵", "code": "CGAF" },
+      { "name": "接力工蜂", "code": "CSAF" }
+    ],
+    "logic": "大师擅长拉扯空间，需要灵活的跑位手利用这些稍纵即逝的空档。"
+  },
+  "HGVF": {
+    "title": "快乐赌徒",
+    "desc": "“看好了，我要整大招了！” 你是场上的惊喜制造机。比起稳扎稳打，你更享受 Huck 带来的快感。快乐就完事了！",
+    "pros": ["出其不意的进攻角度", "全场气氛组组长", "心理素质极其强大"],
+    "partnerSuggestions": [
+      { "name": "Layout狂魔", "code": "CGVF" },
+      { "name": "高空轰炸机", "code": "CGVW" }
+    ],
+    "logic": "赌徒敢甩，狂魔敢扑。这是一场概率论的浪漫碰撞。"
+  },
+  "HGVW": {
+    "title": "王牌狙击",
+    "desc": "你的眼中只有 Endzone。作为远程重炮，你拥有瞬间终结回合的能力。只要对方防守露出一丝缝隙，长传必达。",
+    "pros": ["超远距离打击能力", "自信心爆棚，敢于接管比赛", "一人带飞全场进攻节奏"],
+    "partnerSuggestions": [
+      { "name": "高空轰炸机", "code": "CGVW" },
+      { "name": "终结机器", "code": "CGAW" }
+    ],
+    "logic": "狙击手负责发射导弹，轰炸机负责在得分区高空制霸，黄金远程搭档。"
+  },
+  "HGAF": {
+    "title": "整活大师",
+    "desc": "Scoober、Hammer、背后传盘... 你的传盘姿势比对手的防守策略还要多。帅气程度远超比分重要性。",
+    "pros": ["打破防守僵局的奇招多", "难以捉摸的出盘角度", "观赏性极佳"],
+    "partnerSuggestions": [
+      { "name": "灵动幽灵", "code": "CGAF" },
+      { "name": "接力工蜂", "code": "CSAF" }
+    ],
+    "logic": "大师的出盘角度刁钻，需要同样神出鬼没、接盘半径大的幽灵来接应。"
+  },
+  "HGAW": {
+    "title": "冷面杀手",
+    "desc": "你不参与讨论，不喊叫。你只是静静地拿盘，然后用一记角度刁钻的长传让对方后场报警。用出盘让全场安静。",
+    "pros": ["隐蔽性极强的出盘动作", "关键时刻绝不手软", "极高的长传成功率"],
+    "partnerSuggestions": [
+      { "name": "终结机器", "code": "CGAW" },
+      { "name": "战术卷王", "code": "CSAW" }
+    ],
+    "logic": "两个莫得感情的冷面人，一个敢传一个必到，最高效的杀手小组。"
+  },
+  "CSVF": {
+    "title": "气氛组组长",
+    "desc": "即便在 Sideline，喊声也能贯穿全场。不仅积极接应，还能提供情绪价值。球队的粘合剂。",
+    "pros": ["满场积极跑位，从不懈怠", "沟通反馈极快，队友很省心", "团队士气助推器"],
+    "partnerSuggestions": [
+      { "name": "盘场慈母", "code": "HSVF" },
+      { "name": "发盘机器", "code": "HSAF" }
+    ],
+    "logic": "气氛组需要慈母的包容和稳定，这种充满爱和鼓励的配合最快乐。"
+  },
+  "CSVW": {
+    "title": "防守闸门",
+    "desc": "你是对手 Handler 的噩梦。你把防守当成一种艺术，通过不断的施压和精准的站位让对手感到窒息。",
+    "pros": ["铁血防守，纪律性极强", "预判极准，擅长制造 D-block", "防线指挥官"],
+    "partnerSuggestions": [
+      { "name": "精神教头", "code": "HSVW" },
+      { "name": "节奏大师", "code": "HSAW" }
+    ],
+    "logic": "防守悍将需要战术大脑的全局指挥，共同构筑密不透风的铁锁阵。"
+  },
+  "CSAF": {
+    "title": "接力工蜂",
+    "desc": "场上最勤恳的蓝领。哪里需要接应你就出现在哪里。通过一次次稳健的接力传导，理顺进攻。",
+    "pros": ["出色的接应意识", "极强的体能与执行力", "进攻体系中的完美润滑剂"],
+    "partnerSuggestions": [
+      { "name": "发盘机器", "code": "HSAF" },
+      { "name": "盘场慈母", "code": "HSVF" }
+    ],
+    "logic": "工蜂与机器的组合是球队稳定的基石，保证盘权在基础推进中万无一失。"
+  },
+  "CSAW": {
+    "title": "战术卷王",
+    "desc": "你是教科书级别的 Cutter。你会严格计算每一个时机，不仅卷死对手，还要卷死自己。战术执行模范。",
+    "pros": ["完美的 Stack 纪律性", "跑位效率极高，从不浪费空间", "战术复盘达人"],
+    "partnerSuggestions": [
+      { "name": "精神教头", "code": "HSVW" },
+      { "name": "节奏大师", "code": "HSAW" }
+    ],
+    "logic": "卷王最怕指令不清晰。遇到指挥官，两人能把战术板上的路线跑成艺术。"
+  },
+  "CGVF": {
+    "title": "Layout狂魔",
+    "desc": "“盘在人在，盘飞人飞！” 只要飞盘在空中，你的第一反应就是起飞。接不到盘没关系，姿势一定要帅！",
+    "pros": ["极限救球能力，拯救不合理出盘", "极具感染力的赛场拼劲", "创造奇迹的体能素质"],
+    "partnerSuggestions": [
+      { "name": "快乐赌徒", "code": "HGVF" },
+      { "name": "整活大师", "code": "HGAF" }
+    ],
+    "logic": "狂魔最喜欢不走寻常路的出盘，给他们足够的‘整活’空间去表演飞扑。"
+  },
+  "CGVW": {
+    "title": "高空轰炸机",
+    "desc": "你是场上的“天空之主”。只要有高球，那就是你的主场。摘盘（Skying）统治感，暴力美学担当。",
+    "pros": ["无敌的高空球争抢能力", "终点区（Endzone）的绝对威胁", "身体素质断层领先"],
+    "partnerSuggestions": [
+      { "name": "王牌狙击", "code": "HGVW" },
+      { "name": "冷面杀手", "code": "HGAW" }
+    ],
+    "logic": "当狙击手在高位无法突破时，往天上扔个 Float 球让轰炸机去强吃，是无解的战术。"
+  },
+  "CGAF": {
+    "title": "灵动幽灵",
+    "desc": "假动作比跑位还多。通过诡异的重心摆动和走位，瞬间甩开防守。神出鬼没，接盘即摆 Pose。",
+    "pros": ["极强的单挑（ISO）摆脱能力", "极具创造力的跑位路线", "擅长在狭小空间接盘"],
+    "partnerSuggestions": [
+      { "name": "节奏大师", "code": "HSAW" },
+      { "name": "整活大师", "code": "HGAF" }
+    ],
+    "logic": "节奏大师拉开的空间，只有幽灵能捕捉到那瞬间的切入窗口。"
+  },
+  "CGAW": {
+    "title": "终结机器",
+    "desc": "莫得感情的得分点。接盘、得分、转身回跑，一气呵成。球队进攻序列里的最后一块拼图。",
+    "pros": ["教科书般的终结位直觉", "极高的接球得分转换率", "大赛大心脏，从不掉链子"],
+    "partnerSuggestions": [
+      { "name": "盘场慈母", "code": "HSVF" },
+      { "name": "精神教头", "code": "HSVW" }
+    ],
+    "logic": "大脑负责精准喂球，机器负责冷酷吃饼。这是夺冠球队的标配后场组合。"
+  }
+};
+
+      function fbtiStandalone() {
+        return {
+          stage: "start",
+          openAbout: false,
+          openShare: false,
+          openLogin: false,
+          fadeState: "in",
+
+          questions: [],
+          resultsMap: {},
+          currentIndex: 0,
+          answers: [],
+          score: { H: 0, C: 0, S: 0, G: 0, V: 0, A: 0, F: 0, W: 0 },
+          result: { code: "----", title: "", desc: "", pros: [], partnerSuggestions: [], logic: "" },
+          user: { nickname: "", team: "" },
+          loginBusy: false,
+          loginStatus: "",
+
+          init() {
+            this.questions = Array.isArray(FBTI_QUESTIONS) ? FBTI_QUESTIONS : [];
+            this.resultsMap = FBTI_RESULTS && typeof FBTI_RESULTS === "object" ? FBTI_RESULTS : {};
+          },
+
+          beginFlow() {
+            this.openLogin = true;
+            this.loginStatus = "";
+          },
+
+          async submitLoginAndStart() {
+            if (!this.user.nickname) return;
+            this.loginBusy = true;
+            this.loginStatus = "正在记录登录信息…";
+            try {
+              // 离线版：优先尝试同源后端；失败则写入本地 localStorage（不阻塞使用）
+              const res = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nickname: this.user.nickname, team: this.user.team, code: "" }),
+              });
+              if (!res.ok) throw new Error(`http_${res.status}`);
+              this.loginStatus = "已记录。祝你开盘顺滑！";
+            } catch (e) {
+              try {
+                const key = "fbti_local_logins";
+                const prev = JSON.parse(localStorage.getItem(key) || "[]");
+                prev.push({ ts: Date.now(), nickname: this.user.nickname, team: this.user.team });
+                localStorage.setItem(key, JSON.stringify(prev.slice(-200)));
+                this.loginStatus = "已记录（本地）。祝你开盘顺滑！";
+              } catch (e2) {
+                this.loginStatus = "记录失败，但不影响做题：直接开始即可。";
+              }
+            } finally {
+              this.loginBusy = false;
+              this.openLogin = false;
+              this.start();
+            }
+          },
+
+          start() {
+            this.stage = "quiz";
+            this.currentIndex = 0;
+            this.answers = [];
+            this.score = { H: 0, C: 0, S: 0, G: 0, V: 0, A: 0, F: 0, W: 0 };
+            this.fadeState = "in";
+          },
+
+          restart() {
+            this.stage = "start";
+            this.openShare = false;
+            this.openAbout = false;
+            this.openLogin = false;
+          },
+
+          currentQuestion() {
+            return this.questions[this.currentIndex];
+          },
+
+          progressPct() {
+            if (!this.questions.length) return 0;
+            return Math.round(((this.currentIndex + 1) / this.questions.length) * 100);
+          },
+
+          applyScores(option, dir) {
+            const scores = option && option.scores && typeof option.scores === "object" ? option.scores : null;
+            if (scores) {
+              for (const k of Object.keys(scores)) {
+                const v = Number(scores[k]) || 0;
+                if (!Object.prototype.hasOwnProperty.call(this.score, k)) continue;
+                const next = (this.score[k] || 0) + dir * v;
+                this.score[k] = Math.max(0, next);
+              }
+              return;
+            }
+            const t = option && option.type;
+            if (t && Object.prototype.hasOwnProperty.call(this.score, t)) {
+              this.score[t] = Math.max(0, (this.score[t] || 0) + dir * 1);
+            }
+          },
+
+          answer(optionIndex) {
+            const picked = this.currentQuestion().options[optionIndex];
+            this.answers[this.currentIndex] = picked;
+            this.applyScores(picked, +1);
+
+            this.fadeState = "out";
+            setTimeout(() => {
+              if (this.currentIndex < this.questions.length - 1) {
+                this.currentIndex += 1;
+                this.fadeState = "in";
+              } else {
+                this.finish();
+              }
+            }, 140);
+          },
+
+          backOne() {
+            if (this.currentIndex === 0) return;
+            const prevIndex = this.currentIndex - 1;
+            const prevPicked = this.answers[prevIndex];
+            if (prevPicked) this.applyScores(prevPicked, -1);
+            this.fadeState = "out";
+            setTimeout(() => {
+              this.currentIndex = prevIndex;
+              this.fadeState = "in";
+            }, 120);
+          },
+
+          finish() {
+            const code = this.computeCode();
+            this.result = this.lookupResult(code);
+            this.stage = "result";
+            this.openShare = false;
+            this.fadeState = "in";
+          },
+
+          computeCode() {
+            const pick = (a, b) => (this.score[a] >= this.score[b] ? a : b);
+            return pick("H", "C") + pick("S", "G") + pick("V", "A") + pick("F", "W");
+          },
+
+          flipCode(code) {
+            const flip = (ch) => ({ H: "C", C: "H", S: "G", G: "S", V: "A", A: "V", F: "W", W: "F" }[ch] || ch);
+            return String(code || "").split("").map(flip).join("");
+          },
+
+          lookupResult(code) {
+            const table = this.resultsMap || {};
+            if (table[code]) return { code, ...table[code] };
+
+            const parts = [];
+            parts.push(code[0] === "H" ? "控盘型：更擅长拿盘组织、读防守、用节奏赢回合。" : "跑位型：更擅长无盘切入、制造空间、在关键窗口完成接盘。");
+            parts.push(code[1] === "S" ? "稳健：倾向高成功率选择，失误率低，适合稳住队伍下限。" : "尝试：敢打窗口球，能把局面从 0 打成 1，但需要纪律配合。");
+            parts.push(code[2] === "V" ? "沟通：会 call、会读、会提醒，能让队伍更像一个系统。" : "执行：少说多做，用动作把对抗拉满，带动队伍节奏。");
+            parts.push(code[3] === "F" ? "快乐：偏爱 flow 和创造力，让队友打得更松弛。" : "竞技：胜负优先，关键分更冷静，更讲效率。");
+
+            return {
+              code,
+              title: "赛场通用型",
+              desc: parts.join(" "),
+              pros: ["适配多数体系，融入快", "压力场景下仍能做清晰决策", "能根据队友风格调整自己的打法"],
+              partnerSuggestions: [{ name: "互补型队友", code: this.flipCode(code) }],
+              logic: "你当前的倾向比较均衡时，最推荐用互补位来补齐短板：让对方在你弱侧维度提供稳定支持，关键回合更不容易断电。",
+            };
+          },
+
+          dimPct(a, b) {
+            const av = this.score[a] || 0;
+            const bv = this.score[b] || 0;
+            const total = av + bv;
+            if (!total) return { a: 50, b: 50 };
+            const ap = Math.round((av / total) * 100);
+            return { a: ap, b: 100 - ap };
+          },
+
+          shareText() {
+            const r = this.result;
+            return `🚀 我测出了 FBTI：${r.code}\\n「${r.title}」\\n\\n${r.desc}\\n\\n#飞盘 #FBTI`;
+          },
+
+          async copyShare() {
+            try {
+              await navigator.clipboard.writeText(this.shareText());
+              alert("已复制到剪贴板！");
+            } catch (e) {
+              prompt("复制失败，请手动复制：", this.shareText());
+            }
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
+

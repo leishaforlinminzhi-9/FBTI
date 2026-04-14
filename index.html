@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FBTI 飞盘人格测试</title>
+    <meta name="description" content="FBTI（Frisbee Behavior Type Indicator）飞盘人格测试：发现你的赛场灵魂原型。" />
+
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ultimate: "#2563eb",
+              disc: "#f8fafc",
+              ink: "#0b1220",
+            },
+            boxShadow: {
+              soft: "0 18px 40px rgba(2, 6, 23, 0.18)",
+            },
+            keyframes: {
+              pop: { "0%": { transform: "scale(0.98)" }, "100%": { transform: "scale(1)" } },
+            },
+            animation: {
+              pop: "pop 220ms ease-out",
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- Alpine.js (CDN) -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+      /* iOS tap highlight */
+      * { -webkit-tap-highlight-color: transparent; }
+      /* smoother transitions */
+      [x-cloak] { display: none !important; }
+    </style>
+  </head>
+
+  <body class="min-h-dvh bg-gradient-to-b from-disc to-white text-slate-900 selection:bg-ultimate/20">
+    <div
+      class="mx-auto min-h-dvh w-full max-w-[480px] px-4 py-6"
+      x-data="fbtiApp()"
+      x-init="init()"
+    >
+      <!-- Top bar -->
+      <header class="mb-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="grid h-10 w-10 place-items-center rounded-2xl bg-ultimate text-white shadow-lg shadow-ultimate/20">
+            <span class="text-lg font-black">F</span>
+          </div>
+          <div class="leading-tight">
+            <div class="text-sm font-semibold text-slate-700">FBTI</div>
+            <div class="text-xs text-slate-500">Frisbee Behavior Type Indicator</div>
+          </div>
+        </div>
+        <button
+          class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white active:scale-[0.98]"
+          type="button"
+          @click="openAbout = true"
+        >
+          说明
+        </button>
+      </header>
+
+      <!-- Stage: Start -->
+      <main x-show="stage === 'start'" x-transition.opacity.duration.250ms class="animate-pop">
+        <section class="rounded-2xl bg-white/70 p-5 shadow-soft backdrop-blur">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h1 class="text-2xl font-black tracking-tight text-ink">
+                🚀 FBTI 飞盘人格测试
+              </h1>
+              <p class="mt-2 text-sm text-slate-600">
+                发现你的赛场灵魂原型
+              </p>
+            </div>
+            <div class="rounded-2xl bg-ultimate/10 px-3 py-2 text-xs font-semibold text-ultimate">
+              Mobile-First
+            </div>
+          </div>
+
+          <div class="mt-5 grid gap-3">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+              <div class="text-sm font-bold text-slate-800">你会得到什么？</div>
+              <ul class="mt-2 space-y-2 text-sm text-slate-600">
+                <li class="flex gap-2"><span class="mt-0.5 h-2 w-2 rounded-full bg-ultimate"></span>4 维度：控盘 / 跑位、稳健 / 尝试、沟通 / 执行、快乐 / 竞技</li>
+                <li class="flex gap-2"><span class="mt-0.5 h-2 w-2 rounded-full bg-ultimate"></span>4 位代码 + 人格称号 + 场上优势 + 搭档建议</li>
+              </ul>
+            </div>
+
+            <button
+              class="group relative overflow-hidden rounded-2xl bg-ultimate px-5 py-4 text-left text-white shadow-lg shadow-ultimate/30 active:scale-[0.98]"
+              type="button"
+              @click="beginFlow()"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-base font-black tracking-tight">开始测试</div>
+                  <div class="mt-0.5 text-xs text-white/80">上场前先测一测，别当隐形人</div>
+                </div>
+                <div class="grid h-10 w-10 place-items-center rounded-2xl bg-white/15">
+                  <span class="text-lg">➜</span>
+                </div>
+              </div>
+              <div class="pointer-events-none absolute -right-12 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl transition group-hover:translate-x-2"></div>
+            </button>
+
+            <div class="text-center text-xs text-slate-500">
+              不收集任何个人信息
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Stage: Quiz -->
+      <main x-show="stage === 'quiz'" x-transition.opacity.duration.200ms x-cloak>
+        <section class="rounded-2xl bg-white/75 p-5 shadow-soft backdrop-blur">
+          <!-- Progress -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-600">
+              <div>进度</div>
+              <div><span x-text="currentIndex + 1"></span>/<span x-text="questions.length"></span></div>
+            </div>
+            <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                class="h-full rounded-full bg-ultimate transition-[width] duration-300 ease-out"
+                :style="`width: ${progressPct()}%`"
+                aria-label="progress"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Question -->
+          <div class="min-h-[180px]">
+            <div x-show="fadeState === 'in'" x-transition.opacity.duration.180ms>
+              <div class="text-xs font-semibold text-ultimate/90">
+                <span class="rounded-xl bg-ultimate/10 px-3 py-1">飞盘场景题</span>
+              </div>
+              <h2 class="mt-3 text-xl font-black leading-snug tracking-tight text-ink" x-text="currentQuestion().q"></h2>
+            </div>
+          </div>
+
+          <!-- Options -->
+          <div class="mt-4 grid gap-3">
+            <template x-for="(opt, idx) in currentQuestion().options" :key="idx">
+              <button
+                type="button"
+                class="relative w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm transition active:scale-[0.98] active:border-ultimate/40"
+                @click="answer(idx)"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-slate-50 text-sm font-black text-slate-800">
+                    <span x-text="idx === 0 ? 'A' : 'B'"></span>
+                  </div>
+                  <div class="flex-1">
+                    <div class="text-base font-extrabold text-slate-900" x-text="opt.text"></div>
+                  </div>
+                </div>
+              </button>
+            </template>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between">
+            <button
+              class="rounded-xl px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 active:scale-[0.98]"
+              type="button"
+              :disabled="currentIndex === 0"
+              :class="currentIndex === 0 ? 'opacity-40' : ''"
+              @click="backOne()"
+            >
+              上一题
+            </button>
+            <button
+              class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white active:scale-[0.98]"
+              type="button"
+              @click="resetConfirm()"
+            >
+              重新开始
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <!-- Stage: Result -->
+      <main x-show="stage === 'result'" x-transition.opacity.duration.250ms x-cloak>
+        <section class="relative overflow-hidden rounded-2xl p-[1px] shadow-soft">
+          <!-- gradient border -->
+          <div class="absolute inset-0 bg-gradient-to-br from-ultimate/70 via-sky-400/50 to-emerald-300/40"></div>
+          <!-- glass card -->
+          <div class="relative rounded-2xl bg-white/70 p-5 backdrop-blur">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="text-xs font-semibold text-slate-600">你的类型</div>
+                <div class="mt-1 text-3xl font-black tracking-tight text-ink">
+                  <span x-text="result.code"></span>
+                </div>
+                <div class="mt-1 text-sm font-extrabold text-ultimate" x-text="result.title"></div>
+              </div>
+              <div class="rounded-2xl bg-ultimate px-3 py-2 text-xs font-bold text-white shadow-lg shadow-ultimate/25">
+                FBTI
+              </div>
+            </div>
+
+            <div class="mt-4 grid gap-3">
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+                <div class="text-sm font-bold text-slate-800">属性比例</div>
+                <div class="mt-3 grid gap-3">
+                  <template x-for="row in [
+                    { a: 'H', b: 'C', name: '控盘 H / 跑位 C' },
+                    { a: 'S', b: 'G', name: '稳健 S / 尝试 G' },
+                    { a: 'V', b: 'A', name: '沟通 V / 执行 A' },
+                    { a: 'F', b: 'W', name: '快乐 F / 竞技 W' },
+                  ]" :key="row.a">
+                    <div>
+                      <div class="flex items-center justify-between text-xs font-semibold text-slate-600">
+                        <div x-text="row.name"></div>
+                        <div class="text-slate-700">
+                          <span class="font-extrabold text-ink" x-text="`${row.a} ${dimPct(row.a,row.b).a}%`"></span>
+                          <span class="mx-1 text-slate-400">·</span>
+                          <span class="font-extrabold text-ink" x-text="`${row.b} ${dimPct(row.a,row.b).b}%`"></span>
+                        </div>
+                      </div>
+                      <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/60">
+                        <div
+                          class="h-full rounded-full bg-gradient-to-r from-ultimate to-sky-400 transition-[width] duration-300 ease-out"
+                          :style="`width: ${dimPct(row.a,row.b).a}%`"
+                        ></div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+                <div class="text-sm font-bold text-slate-800">性格描述</div>
+                <p class="mt-2 text-sm leading-relaxed text-slate-700" x-text="result.desc"></p>
+              </div>
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+                <div class="text-sm font-bold text-slate-800">场上优势</div>
+                <ul class="mt-2 space-y-2 text-sm text-slate-700">
+                  <template x-for="(p, i) in result.pros" :key="i">
+                    <li class="flex gap-2">
+                      <span class="mt-1.5 h-2 w-2 rounded-full bg-ultimate"></span>
+                      <span x-text="p"></span>
+                    </li>
+                  </template>
+                </ul>
+              </div>
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4">
+                <div class="text-sm font-bold text-slate-800">建议搭档</div>
+                <div class="mt-2 grid gap-2 text-sm text-slate-700">
+                  <template x-for="(p, i) in (result.partnerSuggestions || [])" :key="i">
+                    <div class="flex items-center justify-between rounded-2xl border border-white/60 bg-white/40 px-3 py-2">
+                      <div class="font-semibold" x-text="p.name"></div>
+                      <div class="rounded-xl bg-ultimate/10 px-2 py-1 text-xs font-extrabold text-ultimate" x-text="p.code"></div>
+                    </div>
+                  </template>
+                  <div x-show="!(result.partnerSuggestions && result.partnerSuggestions.length)" x-cloak class="text-slate-500">
+                    推荐互补型搭档：<span class="font-extrabold text-slate-700" x-text="flipCode(result.code)"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4" x-show="result.logic" x-cloak>
+                <div class="text-sm font-bold text-slate-800">搭档逻辑</div>
+                <p class="mt-2 text-sm leading-relaxed text-slate-700" x-text="result.logic"></p>
+              </div>
+            </div>
+
+            <div class="mt-5 grid grid-cols-2 gap-3">
+              <button
+                class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-extrabold text-slate-800 shadow-sm active:scale-[0.98]"
+                type="button"
+                @click="restart()"
+              >
+                重新测试
+              </button>
+              <button
+                class="rounded-2xl bg-ultimate px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-ultimate/30 active:scale-[0.98]"
+                type="button"
+                @click="openShare = true"
+              >
+                分享截图（UI模拟）
+              </button>
+            </div>
+
+            <div class="mt-4 text-center text-xs text-slate-500">
+              小提示：结果是倾向，不是标签。换个队伍/战术，你也会变。
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- About modal -->
+      <div x-show="openAbout" x-transition.opacity x-cloak class="fixed inset-0 z-50 grid place-items-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="openAbout=false"></div>
+        <div class="relative w-full max-w-[480px] rounded-2xl bg-white p-5 shadow-soft">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-base font-black text-ink">FBTI 维度说明</div>
+              <div class="mt-1 text-xs text-slate-500">每题二选一，选项会给某个字母加 1 分</div>
+            </div>
+            <button class="rounded-xl px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100" @click="openAbout=false" type="button">×</button>
+          </div>
+          <div class="mt-4 grid gap-3 text-sm text-slate-700">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <div class="font-extrabold text-slate-800">H / C</div>
+              <div class="mt-1 text-slate-600">Handler 控盘（拿盘组织） vs Cutter 跑位（无盘切入）</div>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <div class="font-extrabold text-slate-800">S / G</div>
+              <div class="mt-1 text-slate-600">Steady 稳健（高成功率选择） vs Gambler 尝试（敢打敢赌）</div>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <div class="font-extrabold text-slate-800">V / A</div>
+              <div class="mt-1 text-slate-600">Vocal 沟通（指挥/读场） vs Action 执行（以行动带节奏）</div>
+            </div>
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <div class="font-extrabold text-slate-800">F / W</div>
+              <div class="mt-1 text-slate-600">Fun 快乐（享受 flow） vs Win 竞技（赢盘优先）</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Share modal (UI simulation) -->
+      <div x-show="openShare" x-transition.opacity x-cloak class="fixed inset-0 z-50 grid place-items-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="openShare=false"></div>
+        <div class="relative w-full max-w-[480px] overflow-hidden rounded-2xl bg-white shadow-soft">
+          <div class="bg-gradient-to-r from-ultimate to-sky-500 px-5 py-4 text-white">
+            <div class="text-base font-black">分享结果（UI 模拟）</div>
+            <div class="mt-1 text-xs text-white/80">无法真正生成图片（未引入额外库），但可复制海报文案并提示截图</div>
+          </div>
+          <div class="p-5">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div class="text-xs font-semibold text-slate-500">可复制文案</div>
+              <div class="mt-2 whitespace-pre-wrap text-sm font-semibold text-slate-800" x-text="shareText()"></div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-2 gap-3">
+              <button
+                class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-extrabold text-slate-800 shadow-sm active:scale-[0.98]"
+                type="button"
+                @click="copyShare()"
+              >
+                复制文案
+              </button>
+              <button
+                class="rounded-2xl bg-ultimate px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-ultimate/25 active:scale-[0.98]"
+                type="button"
+                @click="openShare=false"
+              >
+                我去截图
+              </button>
+            </div>
+
+            <div class="mt-3 text-xs text-slate-500">
+              建议：长按或系统截图即可分享。若你想要一键生成海报图，可以再告诉我引入 `html2canvas`。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login modal -->
+      <div x-show="openLogin" x-transition.opacity x-cloak class="fixed inset-0 z-50 grid place-items-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="openLogin=false"></div>
+        <div class="relative w-full max-w-[480px] rounded-2xl bg-white p-5 shadow-soft">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-base font-black text-ink">先报个名再上场</div>
+              <div class="mt-1 text-xs text-slate-500">我们会记录昵称/队伍（用于“登录信息”统计），不记录密码</div>
+            </div>
+            <button class="rounded-xl px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100" @click="openLogin=false" type="button">×</button>
+          </div>
+
+          <div class="mt-4 grid gap-3">
+            <label class="grid gap-1">
+              <div class="text-xs font-semibold text-slate-600">昵称（必填）</div>
+              <input
+                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-ultimate/50 focus:ring-4 focus:ring-ultimate/10"
+                placeholder="比如：DumpKing / Layout姐"
+                x-model.trim="user.nickname"
+                maxlength="32"
+              />
+            </label>
+            <label class="grid gap-1">
+              <div class="text-xs font-semibold text-slate-600">队伍/城市（可选）</div>
+              <input
+                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-ultimate/50 focus:ring-4 focus:ring-ultimate/10"
+                placeholder="比如：上海 / 燃烧吧飞盘"
+                x-model.trim="user.team"
+                maxlength="64"
+              />
+            </label>
+
+            <div class="mt-1 flex items-center justify-between gap-3">
+              <div class="text-xs text-slate-500" x-text="loginStatus"></div>
+              <button
+                class="rounded-2xl bg-ultimate px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-ultimate/25 active:scale-[0.98] disabled:opacity-50"
+                type="button"
+                :disabled="loginBusy || !user.nickname"
+                @click="submitLoginAndStart()"
+              >
+                <span x-show="!loginBusy">进入测试</span>
+                <span x-show="loginBusy" x-cloak>提交中…</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function fbtiApp() {
+        return {
+          stage: "start", // 'start' | 'quiz' | 'result'
+          openAbout: false,
+          openShare: false,
+          openLogin: false,
+          fadeState: "in",
+
+          questions: [],
+          currentIndex: 0,
+          // store picks for back navigation
+          answers: [],
+
+          // scores
+          score: { H: 0, C: 0, S: 0, G: 0, V: 0, A: 0, F: 0, W: 0 },
+
+          result: { code: "----", title: "", desc: "", pros: [], partnerSuggestions: [], logic: "" },
+
+          user: { nickname: "", team: "" },
+          loginBusy: false,
+          loginStatus: "",
+          dataBusy: false,
+          dataError: "",
+          resultsMap: {},
+
+          async init() {
+            await this.loadData();
+          },
+
+          async loadData() {
+            this.dataBusy = true;
+            this.dataError = "";
+            try {
+              const [qRes, rRes] = await Promise.all([
+                fetch("/questions.json", { cache: "no-store" }),
+                fetch("/results.json", { cache: "no-store" }),
+              ]);
+              if (!qRes.ok) throw new Error(`questions_http_${qRes.status}`);
+              if (!rRes.ok) throw new Error(`results_http_${rRes.status}`);
+              const questions = await qRes.json();
+              const results = await rRes.json();
+
+              if (!Array.isArray(questions) || questions.length < 1) throw new Error("questions_invalid");
+              if (!results || typeof results !== "object") throw new Error("results_invalid");
+
+              this.questions = questions;
+              this.resultsMap = results;
+            } catch (e) {
+              this.dataError = "数据加载失败：请通过后端服务器访问（例如运行 server.py），以便读取 questions.json / results.json。";
+              // Keep app usable even if JSON can't be loaded (e.g. file://).
+              this.questions = [];
+              this.resultsMap = {};
+            } finally {
+              this.dataBusy = false;
+            }
+          },
+
+          beginFlow() {
+            if (this.dataBusy) {
+              this.loginStatus = "数据加载中，请稍等…";
+              this.openLogin = true;
+              return;
+            }
+            if (!this.questions.length) {
+              this.openLogin = true;
+              this.loginStatus = this.dataError || "题库未加载成功，请用服务器方式打开页面。";
+              return;
+            }
+            this.openLogin = true;
+            this.loginStatus = "";
+          },
+
+          async submitLoginAndStart() {
+            if (!this.user.nickname) return;
+            this.loginBusy = true;
+            this.loginStatus = "正在记录登录信息…";
+            try {
+              const res = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  nickname: this.user.nickname,
+                  team: this.user.team,
+                  code: "",
+                }),
+              });
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || `http_${res.status}`);
+              }
+              this.loginStatus = "已记录。祝你开盘顺滑！";
+              this.openLogin = false;
+              this.start();
+            } catch (e) {
+              this.loginStatus = "记录失败：请确认你是通过后端服务器打开页面（而不是直接双击打开）。";
+            } finally {
+              this.loginBusy = false;
+            }
+          },
+
+          start() {
+            this.stage = "quiz";
+            this.currentIndex = 0;
+            this.answers = [];
+            this.score = { H: 0, C: 0, S: 0, G: 0, V: 0, A: 0, F: 0, W: 0 };
+            this.fadeState = "in";
+          },
+
+          currentQuestion() {
+            return this.questions[this.currentIndex];
+          },
+
+          progressPct() {
+            if (!this.questions.length) return 0;
+            return Math.round(((this.currentIndex + 1) / this.questions.length) * 100);
+          },
+
+          answer(optionIndex) {
+            const q = this.currentQuestion();
+            const picked = q.options[optionIndex];
+
+            // record answer for back navigation
+            this.answers[this.currentIndex] = picked;
+            this.applyScores(picked, +1);
+
+            // move next with fade
+            this.fadeState = "out";
+            setTimeout(() => {
+              if (this.currentIndex < this.questions.length - 1) {
+                this.currentIndex += 1;
+                this.fadeState = "in";
+              } else {
+                this.finish();
+              }
+            }, 140);
+          },
+
+          backOne() {
+            if (this.currentIndex === 0) return;
+            const prevIndex = this.currentIndex - 1;
+            const prevPicked = this.answers[prevIndex];
+            if (prevPicked) this.applyScores(prevPicked, -1);
+
+            this.fadeState = "out";
+            setTimeout(() => {
+              this.currentIndex = prevIndex;
+              this.fadeState = "in";
+            }, 120);
+          },
+
+          resetConfirm() {
+            // simple confirm without blocking automation: use built-in confirm
+            if (confirm("确定要重新开始吗？当前进度会清空。")) this.start();
+          },
+
+          finish() {
+            const code = this.computeCode();
+            this.result = this.lookupResult(code);
+            this.stage = "result";
+            this.openShare = false;
+            this.fadeState = "in";
+          },
+
+          computeCode() {
+            const pick = (a, b) => (this.score[a] >= this.score[b] ? a : b);
+            return (
+              pick("H", "C") +
+              pick("S", "G") +
+              pick("V", "A") +
+              pick("F", "W")
+            );
+          },
+
+          applyScores(option, dir) {
+            // Supports new format: option.scores = {H:1,S:1,...}
+            // Backward compatible: option.type means +1 to that letter.
+            const scores = option && option.scores && typeof option.scores === "object" ? option.scores : null;
+            if (scores) {
+              for (const k of Object.keys(scores)) {
+                const v = Number(scores[k]) || 0;
+                if (!Object.prototype.hasOwnProperty.call(this.score, k)) continue;
+                const next = (this.score[k] || 0) + dir * v;
+                this.score[k] = Math.max(0, next);
+              }
+              return;
+            }
+            const t = option && option.type;
+            if (t && Object.prototype.hasOwnProperty.call(this.score, t)) {
+              this.score[t] = Math.max(0, (this.score[t] || 0) + dir * 1);
+            }
+          },
+
+          dimPct(a, b) {
+            const av = this.score[a] || 0;
+            const bv = this.score[b] || 0;
+            const total = av + bv;
+            if (!total) return { a: 50, b: 50 };
+            const ap = Math.round((av / total) * 100);
+            return { a: ap, b: 100 - ap };
+          },
+
+          lookupResult(code) {
+            const table = this.resultsMap || {};
+            if (table[code]) return { code, ...table[code] };
+
+            // Fallback: generate a reasonable generic result
+            const parts = [];
+            parts.push(code[0] === "H" ? "控盘型：更擅长拿盘组织、读防守、用节奏赢回合。" : "跑位型：更擅长无盘切入、制造空间、在关键窗口完成接盘。");
+            parts.push(code[1] === "S" ? "稳健：倾向高成功率选择，失误率低，适合稳住队伍下限。" : "尝试：敢打窗口球，能把局面从 0 打成 1，但需要纪律配合。");
+            parts.push(code[2] === "V" ? "沟通：会 call、会读、会提醒，能让队伍更像一个系统。" : "执行：少说多做，用动作把对抗拉满，带动队伍节奏。");
+            parts.push(code[3] === "F" ? "快乐：偏爱 flow 和创造力，让队友打得更松弛。" : "竞技：胜负优先，关键分更冷静，更讲效率。");
+
+            const title = "赛场通用型";
+            const pros = [
+              "能快速读懂队伍节奏并找到自己的位置",
+              "在压力场景下保持清晰决策（尤其关键分）",
+              "适配多数体系：横切、纵切、zone/off-zone 都能融入",
+            ];
+
+            const partnerSuggestions = [{ name: "互补型队友", code: this.flipCode(code) }];
+            const logic = "你的倾向比较均衡时，最推荐用“互补位”来补齐短板：让对方在你不擅长的维度提供稳定支持，关键回合更不容易断电。";
+            return { code, title, desc: parts.join(" "), pros, partnerSuggestions, logic };
+          },
+
+          flipCode(code) {
+            const flip = (ch) => ({ H: "C", C: "H", S: "G", G: "S", V: "A", A: "V", F: "W", W: "F" }[ch] || ch);
+            return code.split("").map(flip).join("");
+          },
+
+          // resultsMap loaded from results.json
+
+          restart() {
+            this.stage = "start";
+            this.openShare = false;
+            this.openAbout = false;
+          },
+
+          shareText() {
+            const r = this.result;
+            return `🚀 我测出了 FBTI：${r.code}\n「${r.title}」\n\n${r.desc}\n\n#飞盘 #FBTI`;
+          },
+
+          async copyShare() {
+            try {
+              await navigator.clipboard.writeText(this.shareText());
+              alert("已复制到剪贴板！");
+            } catch (e) {
+              // fallback
+              prompt("复制失败，请手动复制：", this.shareText());
+            }
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
+
