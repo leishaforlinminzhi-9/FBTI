@@ -439,9 +439,29 @@
           dataBusy: false,
           dataError: "",
           resultsMap: {},
+          backendAvailable: false,
 
           async init() {
             await this.loadData();
+            await this.detectBackend();
+          },
+
+          async detectBackend() {
+            // GitHub Pages 等纯静态环境没有后端：不要让 /api/login 报错阻塞流程
+            this.backendAvailable = false;
+            try {
+              const ctrl = new AbortController();
+              const t = setTimeout(() => ctrl.abort(), 1200);
+              const res = await fetch("api/health", { cache: "no-store", signal: ctrl.signal });
+              clearTimeout(t);
+              if (!res.ok) return;
+              const ct = (res.headers.get("content-type") || "").toLowerCase();
+              if (!ct.includes("application/json")) return;
+              const data = await res.json().catch(() => null);
+              if (data && data.ok === true) this.backendAvailable = true;
+            } catch (e) {
+              // ignore
+            }
           },
 
           async loadData() {
@@ -501,24 +521,30 @@
             this.loginBusy = true;
             this.loginStatus = "正在记录登录信息…";
             try {
-              const res = await fetch("/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  nickname: this.user.nickname,
-                  team: this.user.team,
-                  code: "",
-                }),
-              });
-              if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || `http_${res.status}`);
+              if (this.backendAvailable) {
+                const res = await fetch("api/login", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ nickname: this.user.nickname, team: this.user.team, code: "" }),
+                });
+                if (!res.ok) {
+                  const data = await res.json().catch(() => ({}));
+                  throw new Error(data.error || `http_${res.status}`);
+                }
+                this.loginStatus = "已记录。祝你开盘顺滑！";
+              } else {
+                const key = "fbti_local_logins";
+                const prev = JSON.parse(localStorage.getItem(key) || "[]");
+                prev.push({ ts: Date.now(), nickname: this.user.nickname, team: this.user.team });
+                localStorage.setItem(key, JSON.stringify(prev.slice(-200)));
+                this.loginStatus = "已记录（本地）。祝你开盘顺滑！";
               }
-              this.loginStatus = "已记录。祝你开盘顺滑！";
               this.openLogin = false;
               this.start();
             } catch (e) {
-              this.loginStatus = "记录失败：请确认你是通过后端服务器打开页面（而不是直接双击打开）。";
+              this.loginStatus = "记录失败，但不影响做题：直接进入测试即可。";
+              this.openLogin = false;
+              this.start();
             } finally {
               this.loginBusy = false;
             }
