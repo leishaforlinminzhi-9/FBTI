@@ -250,7 +250,7 @@
               >
                 <div class="relative">
                   <img
-                    class="h-[220px] w-full object-cover"
+                    class="h-auto w-full max-h-[190px] bg-white/30 object-contain"
                     :src="resultImageUrl()"
                     :alt="`FBTI ${result.code}`"
                     @load="onResultImgLoad($event)"
