@@ -251,11 +251,10 @@
               </div>
             </div>
 
-            <div class="mt-5 grid grid-cols-2 gap-3">
-              <button class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-extrabold text-slate-800 shadow-sm active:scale-[0.98]" type="button" @click="restart()">
+            <div class="mt-5">
+              <button class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-extrabold text-slate-800 shadow-sm active:scale-[0.98]" type="button" @click="restart()">
                 重新测试
               </button>
-              <div></div>
             </div>
             </div>
           </div>
@@ -306,41 +305,7 @@
         </div>
       </div>
 
-      <!-- Login modal -->
-      <div x-show="openLogin" x-transition.opacity x-cloak class="fixed inset-0 z-50 grid place-items-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="openLogin=false"></div>
-        <div class="relative w-full max-w-[480px] rounded-2xl bg-white p-5 shadow-soft">
-          <div class="flex items-start justify-between">
-            <div>
-              <div class="text-base font-black text-ink">先报个名再上场</div>
-              <div class="mt-1 text-xs text-slate-500">我们会记录昵称/队伍（用于“登录信息”统计），不记录密码</div>
-            </div>
-            <button class="rounded-xl px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100" @click="openLogin=false" type="button">×</button>
-          </div>
-          <div class="mt-4 grid gap-3">
-            <label class="grid gap-1">
-              <div class="text-xs font-semibold text-slate-600">昵称（必填）</div>
-              <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-ultimate/50 focus:ring-4 focus:ring-ultimate/10" placeholder="比如：DumpKing / Layout姐" x-model.trim="user.nickname" maxlength="32" />
-            </label>
-            <label class="grid gap-1">
-              <div class="text-xs font-semibold text-slate-600">队伍/城市（可选）</div>
-              <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 outline-none focus:border-ultimate/50 focus:ring-4 focus:ring-ultimate/10" placeholder="比如：上海 / 燃烧吧飞盘" x-model.trim="user.team" maxlength="64" />
-            </label>
-            <div class="mt-1 flex items-center justify-between gap-3">
-              <div class="text-xs text-slate-500" x-text="loginStatus"></div>
-              <button
-                class="rounded-2xl bg-ultimate px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-ultimate/25 active:scale-[0.98] disabled:opacity-50"
-                type="button"
-                :disabled="loginBusy || !user.nickname"
-                @click="submitLoginAndStart()"
-              >
-                <span x-show="!loginBusy">进入测试</span>
-                <span x-show="loginBusy" x-cloak>提交中…</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Login removed: start directly -->
     </div>
 
     <script>
@@ -659,7 +624,6 @@
           stage: "start",
           openAbout: false,
           openShare: false,
-          openLogin: false,
           fadeState: "in",
 
           questions: [],
@@ -668,9 +632,6 @@
           answers: [],
           score: { H: 0, C: 0, S: 0, G: 0, V: 0, A: 0, F: 0, W: 0 },
           result: { code: "----", title: "", desc: "", pros: [], partnerSuggestions: [], logic: "" },
-          user: { nickname: "", team: "" },
-          loginBusy: false,
-          loginStatus: "",
           resultReady: true,
 
           init() {
@@ -679,38 +640,7 @@
           },
 
           beginFlow() {
-            this.openLogin = true;
-            this.loginStatus = "";
-          },
-
-          async submitLoginAndStart() {
-            if (!this.user.nickname) return;
-            this.loginBusy = true;
-            this.loginStatus = "正在记录登录信息…";
-            try {
-              // 离线版：优先尝试同源后端；失败则写入本地 localStorage（不阻塞使用）
-              const res = await fetch("/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nickname: this.user.nickname, team: this.user.team, code: "" }),
-              });
-              if (!res.ok) throw new Error(`http_${res.status}`);
-              this.loginStatus = "已记录。祝你开盘顺滑！";
-            } catch (e) {
-              try {
-                const key = "fbti_local_logins";
-                const prev = JSON.parse(localStorage.getItem(key) || "[]");
-                prev.push({ ts: Date.now(), nickname: this.user.nickname, team: this.user.team });
-                localStorage.setItem(key, JSON.stringify(prev.slice(-200)));
-                this.loginStatus = "已记录（本地）。祝你开盘顺滑！";
-              } catch (e2) {
-                this.loginStatus = "记录失败，但不影响做题：直接开始即可。";
-              }
-            } finally {
-              this.loginBusy = false;
-              this.openLogin = false;
-              this.start();
-            }
+            this.start();
           },
 
           start() {
@@ -725,7 +655,6 @@
             this.stage = "start";
             this.openShare = false;
             this.openAbout = false;
-            this.openLogin = false;
           },
 
           currentQuestion() {
