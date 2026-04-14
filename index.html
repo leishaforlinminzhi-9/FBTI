@@ -59,13 +59,16 @@
             <div class="text-xs text-slate-500">Frisbee Behavior Type Indicator</div>
           </div>
         </div>
-        <button
-          class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white active:scale-[0.98]"
-          type="button"
-          @click="openAbout = true"
-        >
-          说明
-        </button>
+        <div class="flex items-center gap-2">
+          <div class="select-none text-[11px] font-bold tracking-wide text-slate-400">by RED</div>
+          <button
+            class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white active:scale-[0.98]"
+            type="button"
+            @click="openAbout = true"
+          >
+            说明
+          </button>
+        </div>
       </header>
 
       <!-- Stage: Start -->
@@ -308,14 +311,7 @@
               >
                 重新测试
               </button>
-              <button
-                class="rounded-2xl px-4 py-3 text-sm font-extrabold shadow-lg active:scale-[0.98]"
-                :style="`background: var(--accent); color: var(--accentText); box-shadow: 0 16px 34px color-mix(in oklab, var(--accent) 35%, transparent);`"
-                type="button"
-                @click="openShare = true"
-              >
-                分享截图（UI模拟）
-              </button>
+              <div></div>
             </div>
 
             <div class="mt-4 text-center text-xs text-slate-500">

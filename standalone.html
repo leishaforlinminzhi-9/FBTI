@@ -42,13 +42,16 @@
             <div class="text-xs text-slate-500">Frisbee Behavior Type Indicator</div>
           </div>
         </div>
-        <button
-          class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white active:scale-[0.98]"
-          type="button"
-          @click="openAbout = true"
-        >
-          说明
-        </button>
+        <div class="flex items-center gap-2">
+          <div class="select-none text-[11px] font-bold tracking-wide text-slate-400">by RED</div>
+          <button
+            class="rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white active:scale-[0.98]"
+            type="button"
+            @click="openAbout = true"
+          >
+            说明
+          </button>
+        </div>
       </header>
 
       <!-- Stage: Start -->
@@ -228,9 +231,7 @@
               <button class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-extrabold text-slate-800 shadow-sm active:scale-[0.98]" type="button" @click="restart()">
                 重新测试
               </button>
-              <button class="rounded-2xl bg-ultimate px-4 py-3 text-sm font-extrabold text-white shadow-lg shadow-ultimate/30 active:scale-[0.98]" type="button" @click="openShare = true">
-                分享截图（UI模拟）
-              </button>
+              <div></div>
             </div>
           </div>
         </section>
