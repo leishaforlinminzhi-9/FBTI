@@ -460,6 +460,7 @@
           dataBusy: false,
           dataError: "",
           resultsMap: {},
+          _prefetchToken: 0,
           // backend login removed
           theme: { accent: "#2563eb", accentDark: "#1d4ed8", accent2: "#38bdf8", accentText: "#ffffff" },
           resultReady: true,
@@ -510,6 +511,60 @@
             this.score = { H: 0, C: 0, S: 0, G: 0, V: 0, A: 0, F: 0, W: 0 };
             this.specialScores = {};
             this.fadeState = "in";
+            this.scheduleResultImagePrefetch();
+          },
+
+          /** 做题阶段后台预拉结果图，避免弱网结果页首开慢 */
+          scheduleResultImagePrefetch() {
+            const table = this.resultsMap;
+            if (!table || typeof table !== "object") return;
+            const keys = Object.keys(table);
+            if (!keys.length) return;
+
+            this._prefetchToken += 1;
+            const token = this._prefetchToken;
+
+            const codes = new Set();
+            for (const k of keys) {
+              codes.add(k);
+              const row = table[k];
+              if (row && Array.isArray(row.partnerSuggestions)) {
+                for (const p of row.partnerSuggestions) {
+                  if (p && p.code) codes.add(String(p.code));
+                }
+              }
+            }
+
+            const urls = [...codes].sort().map((c) => `image/fbti/${c}.png`);
+
+            let idx = 0;
+            let active = 0;
+            const maxParallel = 2;
+
+            const pump = () => {
+              if (token !== this._prefetchToken) return;
+              while (active < maxParallel && idx < urls.length) {
+                const url = urls[idx++];
+                active += 1;
+                const img = new Image();
+                img.decoding = "async";
+                const done = () => {
+                  active -= 1;
+                  if (token !== this._prefetchToken) return;
+                  const next = () => pump();
+                  if (typeof requestIdleCallback !== "undefined") {
+                    requestIdleCallback(next, { timeout: 600 });
+                  } else {
+                    setTimeout(next, 120);
+                  }
+                };
+                img.onload = done;
+                img.onerror = done;
+                img.src = url;
+              }
+            };
+
+            pump();
           },
 
           currentQuestion() {
