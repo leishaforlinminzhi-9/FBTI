@@ -42,7 +42,7 @@ def main() -> None:
     p.add_argument("-o", "--output", default="", help="Output image path (only when processing a single input)")
     p.add_argument(
         "--outdir",
-        default="/data/minzhi/agent/fbti/image/new",
+        default="/data/minzhi/agent/fbti/image/fbti",
         help="Output directory. Save results with the same filename (e.g. out/HSVW.png). Default: ./image_out/",
     )
     p.add_argument("--w", type=int, default=260, help="Cover width in pixels")
@@ -66,7 +66,7 @@ def main() -> None:
         return
 
     # default: process all PNGs in ./image
-    image_dir = Path(__file__).resolve().parent / "image"
+    image_dir = Path(__file__).resolve().parent / "image" / "backup"
     if not image_dir.exists():
         raise SystemExit(f"Default image directory not found: {image_dir}")
 

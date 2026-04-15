@@ -41,8 +41,7 @@
     "hint": "拿盘控场 vs 无盘得分。",
     "options": [
       { "text": "在前场通过 Swing 和 Break 梳理进攻逻辑", "type": "H", "scores": { "H": 2 } },
-      { "text": "在后场冲刺吃掉空档，接盘直接完成绝杀", "type": "C", "scores": { "C": 2 } },
-      { "text": "不管得分区有没有人，肯定要 huck 啊", "type": "IMFW", "scores": { "special": { "IMFW": 1 } } }
+      { "text": "在后场冲刺吃掉空档，接盘直接完成绝杀", "type": "C", "scores": { "C": 2 } }
     ]
   },
   {
@@ -80,7 +79,7 @@
     "options": [
       { "text": "找最近的 Dump 哪怕往回推很多码数", "type": "S", "scores": { "S": 1, "H": 1 } },
       { "text": "往最硬的队友头顶上扔一下赌一把", "type": "G", "scores": { "G": 2 } },
-      { "text": "不管得分区有没有人，肯定要 huck 啊", "type": "special", "scores": { "special": "HUCK" } }
+      { "text": "不管得分区有没有人，肯定要 huck 啊", "type": "special", "scores": { "special": { "HUCK": 1 } } }
     ]
   },
   {
