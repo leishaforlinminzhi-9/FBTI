@@ -181,7 +181,7 @@
     "hint": "角色认知。",
     "options": [
       { "text": "你拿盘的时候我们特别安心，节奏稳得不行", "type": "H", "scores": { "H": 2 } },
-      { "text": "你的跑位太灵动了，防守者根本不知道你在哪", "type": "C", "scores": { "C": 2 } }
+      { "text": "你的跑位太灵动了，防守者根本不知道你在哪", "type": "C", "scores": { "C": 4 } }
     ]
   },
   {
@@ -208,7 +208,7 @@
     "hint": "战术解法。",
     "options": [
       { "text": "主动靠近 Handler 做一个高质量的 Reset 接应", "type": "H", "scores": { "H": 2 } },
-      { "text": "通过一次假动作后的cut in强行拉开空间", "type": "C", "scores": { "C": 2 } }
+      { "text": "通过一次假动作后的cut in强行拉开空间", "type": "C", "scores": { "C": 4 } }
     ]
   },
   {
@@ -272,7 +272,7 @@
     "hint": "掌控欲 vs 利用率。",
     "options": [
       { "text": "留在reset位看队友是否需要接应", "type": "H", "scores": { "H": 2, "S": 1} },
-      { "text": "赶紧进竖排找机会发起进攻", "type": "C", "scores": { "C": 2, "G": 1} }
+      { "text": "赶紧进竖排找机会发起进攻", "type": "C", "scores": { "C": 4, "G": 1} }
     ]
   }
 ]
