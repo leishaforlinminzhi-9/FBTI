@@ -127,7 +127,7 @@
               >
                 <div class="flex items-start gap-3">
                   <div class="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-slate-50 text-sm font-black text-slate-800">
-                    <span x-text="idx === 0 ? 'A' : 'B'"></span>
+                    <span x-text="optLabel(idx)"></span>
                   </div>
                   <div class="flex-1">
                     <div class="text-base font-extrabold text-slate-900" x-text="opt.text"></div>
@@ -186,6 +186,14 @@
             </div>
 
             <div class="mt-4 grid gap-3">
+              <div class="rounded-2xl border border-white/50 bg-white/50 p-4 shadow-lg shadow-ultimate/10" x-show="unlockedSpecials().length" x-cloak>
+                <div class="text-sm font-bold text-slate-800">彩蛋人格</div>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  <template x-for="(sp, i) in unlockedSpecials()" :key="i">
+                    <div class="rounded-2xl bg-ultimate/10 px-3 py-2 text-xs font-extrabold text-ultimate" x-text="specialLabel(sp)"></div>
+                  </template>
+                </div>
+              </div>
               <div class="rounded-2xl border border-white/50 bg-white/50 p-4 shadow-lg shadow-ultimate/10">
                 <div class="text-sm font-bold text-slate-800">属性比例</div>
                 <div class="mt-3 grid gap-3">
@@ -631,6 +639,7 @@
           currentIndex: 0,
           answers: [],
           score: { H: 0, C: 0, S: 0, G: 0, V: 0, A: 0, F: 0, W: 0 },
+          specialScores: {},
           result: { code: "----", title: "", desc: "", pros: [], partnerSuggestions: [], logic: "" },
           resultReady: true,
 
@@ -648,6 +657,7 @@
             this.currentIndex = 0;
             this.answers = [];
             this.score = { H: 0, C: 0, S: 0, G: 0, V: 0, A: 0, F: 0, W: 0 };
+            this.specialScores = {};
             this.fadeState = "in";
           },
 
@@ -658,7 +668,13 @@
           },
 
           currentQuestion() {
-            return this.questions[this.currentIndex];
+            return this.questions[this.currentIndex] || { q: "", options: [] };
+          },
+
+          optLabel(idx) {
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            if (idx >= 0 && idx < letters.length) return letters[idx];
+            return String(idx + 1);
           },
 
           progressPct() {
@@ -670,6 +686,10 @@
             const scores = option && option.scores && typeof option.scores === "object" ? option.scores : null;
             if (scores) {
               for (const k of Object.keys(scores)) {
+                if (k === "special") {
+                  this.applySpecial(scores[k], dir);
+                  continue;
+                }
                 const v = Number(scores[k]) || 0;
                 if (!Object.prototype.hasOwnProperty.call(this.score, k)) continue;
                 const next = (this.score[k] || 0) + dir * v;
@@ -681,6 +701,36 @@
             if (t && Object.prototype.hasOwnProperty.call(this.score, t)) {
               this.score[t] = Math.max(0, (this.score[t] || 0) + dir * 1);
             }
+          },
+
+          applySpecial(payload, dir) {
+            if (!payload) return;
+            if (typeof payload === "string") {
+              const code = payload;
+              const next = (this.specialScores[code] || 0) + dir * 1;
+              this.specialScores[code] = Math.max(0, next);
+              return;
+            }
+            if (typeof payload !== "object") return;
+            for (const code of Object.keys(payload)) {
+              const v = Number(payload[code]) || 0;
+              const next = (this.specialScores[code] || 0) + dir * v;
+              this.specialScores[code] = Math.max(0, next);
+            }
+          },
+
+          unlockedSpecials() {
+            const out = [];
+            const map = this.specialScores || {};
+            for (const k of Object.keys(map)) {
+              if ((map[k] || 0) >= 2) out.push(k);
+            }
+            return out;
+          },
+
+          specialLabel(code) {
+            const map = { IMFW: "IMFW（I am Frisbee）", HUCK: "HUCK" };
+            return map[code] || code;
           },
 
           answer(optionIndex) {
