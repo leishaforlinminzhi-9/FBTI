@@ -265,5 +265,14 @@
       { "text": "教练的提醒和战术指导", "type": "W", "scores": { "W": 1} },
       { "text": "woc，这都敢抽？", "type": "special", "scores": { "special": { "HUCK": 1 } } }
     ]
+  },
+  {
+    "dim": "HC",
+    "q": "竖排进攻时，你在出盘推进之后，更倾向于？",
+    "hint": "掌控欲 vs 利用率。",
+    "options": [
+      { "text": "留在reset位看队友是否需要接应", "type": "H", "scores": { "H": 2, "S": 1} },
+      { "text": "赶紧进竖排找机会发起进攻", "type": "C", "scores": { "C": 2, "G": 1} }
+    ]
   }
 ]

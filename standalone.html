@@ -186,14 +186,6 @@
             </div>
 
             <div class="mt-4 grid gap-3">
-              <div class="rounded-2xl border border-white/50 bg-white/50 p-4 shadow-lg shadow-ultimate/10" x-show="unlockedSpecials().length" x-cloak>
-                <div class="text-sm font-bold text-slate-800">彩蛋人格</div>
-                <div class="mt-2 flex flex-wrap gap-2">
-                  <template x-for="(sp, i) in unlockedSpecials()" :key="i">
-                    <div class="rounded-2xl bg-ultimate/10 px-3 py-2 text-xs font-extrabold text-ultimate" x-text="specialLabel(sp)"></div>
-                  </template>
-                </div>
-              </div>
               <div class="rounded-2xl border border-white/50 bg-white/50 p-4 shadow-lg shadow-ultimate/10">
                 <div class="text-sm font-bold text-slate-800">属性比例</div>
                 <div class="mt-3 grid gap-3">
@@ -728,11 +720,6 @@
             return out;
           },
 
-          specialLabel(code) {
-            const map = { IMFW: "IMFW（I am Frisbee）", HUCK: "HUCK" };
-            return map[code] || code;
-          },
-
           answer(optionIndex) {
             const picked = this.currentQuestion().options[optionIndex];
             this.answers[this.currentIndex] = picked;
@@ -762,7 +749,7 @@
           },
 
           finish() {
-            const code = this.computeCode();
+            const code = this.finalResultCode();
             this.result = this.lookupResult(code);
             this.stage = "result";
             this.openShare = false;
@@ -776,6 +763,14 @@
           computeCode() {
             const pick = (a, b) => (this.score[a] >= this.score[b] ? a : b);
             return pick("H", "C") + pick("S", "G") + pick("V", "A") + pick("F", "W");
+          },
+
+          finalResultCode() {
+            const specials = this.unlockedSpecials();
+            if (!specials.length) return this.computeCode();
+            return specials
+              .slice()
+              .sort((a, b) => (this.specialScores[b] || 0) - (this.specialScores[a] || 0) || a.localeCompare(b))[0];
           },
 
           flipCode(code) {

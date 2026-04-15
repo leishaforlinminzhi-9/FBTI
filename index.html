@@ -242,23 +242,6 @@
 
             <div class="mt-4 grid gap-3">
               <div
-                class="rounded-2xl border border-white/50 bg-white/50 p-4"
-                :style="`box-shadow: 0 14px 32px color-mix(in oklab, var(--accent) 10%, transparent);`"
-                x-show="unlockedSpecials().length"
-                x-cloak
-              >
-                <div class="text-sm font-bold text-slate-800">彩蛋人格</div>
-                <div class="mt-2 flex flex-wrap gap-2">
-                  <template x-for="(sp, i) in unlockedSpecials()" :key="i">
-                    <div
-                      class="rounded-2xl px-3 py-2 text-xs font-extrabold"
-                      :style="`background: color-mix(in oklab, var(--accent) 12%, white); color: var(--accentDark);`"
-                      x-text="specialLabel(sp)"
-                    ></div>
-                  </template>
-                </div>
-              </div>
-              <div
                 class="overflow-hidden rounded-2xl border border-white/50 bg-white/50"
                 :style="`box-shadow: 0 14px 32px color-mix(in oklab, var(--accent) 14%, transparent);`"
               >
@@ -583,7 +566,7 @@
           },
 
           finish() {
-            const code = this.computeCode();
+            const code = this.finalResultCode();
             this.result = this.lookupResult(code);
             this.resetTheme();
             // 异步提取图片主色并应用到结果页主题色
@@ -685,6 +668,15 @@
             );
           },
 
+          finalResultCode() {
+            const specials = this.unlockedSpecials();
+            if (!specials.length) return this.computeCode();
+            // 多个彩蛋同时触发时，取分数最高的；同分按字母序稳定排序
+            return specials
+              .slice()
+              .sort((a, b) => (this.specialScores[b] || 0) - (this.specialScores[a] || 0) || a.localeCompare(b))[0];
+          },
+
           applyScores(option, dir) {
             // Supports new format: option.scores = {H:1,S:1,...}
             // Backward compatible: option.type means +1 to that letter.
@@ -734,14 +726,6 @@
               if ((map[k] || 0) >= 2) out.push(k);
             }
             return out;
-          },
-
-          specialLabel(code) {
-            const map = {
-              IMFW: "IMFW（I am Frisbee）",
-              HUCK: "HUCK",
-            };
-            return map[code] || code;
           },
 
           dimPct(a, b) {
