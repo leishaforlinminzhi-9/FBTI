@@ -5,7 +5,7 @@
     "hint": "控盘组织 vs 跑位制造机会。",
     "options": [
       { "text": "先找 Dump / Swing，把队形拉开再推进", "type": "H", "scores": { "H": 1, "S": 1 } },
-      { "text": "先跑一个深切或 ISO，逼对面做出防守反应", "type": "C", "scores": { "C": 1, "G": 1 } }
+      { "text": "先猛跑一个下底或 cut in，逼对面做出防守反应", "type": "C", "scores": { "C": 1, "G": 1 } }
     ]
   },
   {
@@ -23,7 +23,7 @@
     "hint": "用沟通组织 vs 用动作示范。",
     "options": [
       { "text": "大声提示 stall 数并 call 出明确的站位", "type": "V", "scores": { "V": 2 } },
-      { "text": "直接给一个高质量切入或接盘来示范节奏", "type": "A", "scores": { "A": 2 } }
+      { "text": "直接给高质量切入或稳健出盘来引导队友进攻节奏", "type": "A", "scores": { "A": 2 } }
     ]
   },
   {
